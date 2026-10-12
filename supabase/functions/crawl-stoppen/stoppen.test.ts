@@ -10,7 +10,7 @@ const controle = (naam: string, gelukt: boolean, toelichting = "") => {
   console.log(`  ${gelukt ? "OK  " : "FOUT"} ${naam}${toelichting ? " — " + toelichting : ""}`);
 };
 
-const REPO = "NWW-team/SpellingSpeurneus";
+const REPO = "NWW-team/TypoTapir";
 const nu = Date.parse("2026-10-05T14:00:00Z");
 const aanvraag = (extra: Partial<Aanvraag> = {}): Aanvraag => ({
   id: 7,

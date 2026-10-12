@@ -7,7 +7,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { type Aanvraag, type GitHub, type Opslag, stopCrawl } from "./stoppen.ts";
 
-const REPO = "NWW-team/SpellingSpeurneus";
+const REPO = "NWW-team/TypoTapir";
 const WORKFLOW = "crawl.yml";
 const LOPEND = ["aangevraagd", "crawlen", "publiceren"];
 const KOP = {
@@ -57,7 +57,7 @@ Deno.serve(async (verzoek) => {
         Authorization: `Bearer ${token}`,
         Accept: "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
-        "User-Agent": "SpellingSpeurneus",
+        "User-Agent": "TypoTapir",
       },
     });
 

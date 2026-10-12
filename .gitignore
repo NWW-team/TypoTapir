@@ -1,4 +1,4 @@
-# De echte woordenlijst wordt per run opgehaald bij OpenTaal (enkele MB's).
+# De echte woordenlijst wordt per run opgehaald (Debian-pakket wbritish).
 # Die hoort niet in de repository.
 data/woordenlijst.txt
 

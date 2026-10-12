@@ -8,14 +8,11 @@ on:
       bron:
         description: "Welk deel van de site"
         type: choice
-        default: reisadvies
-        options: [demo, reisadvies, visum-nederland, caribisch-visum, ambassades]
+        default: visa-the-netherlands
+        options: [demo, visa-the-netherlands]
       aanvraag_id:
         description: "Id van de aanvraag in Supabase (door het scherm ingevuld, voor de voortgangsbalk)"
         default: ""
-      opentaal_ref:
-        description: "Versie van de OpenTaal-woordenlijst (tag of commit)"
-        default: "master"
 
 permissions:
   contents: read
@@ -34,7 +31,7 @@ jobs:
       - name: Run koppelen aan de aanvraag
         if: inputs.aanvraag_id != ''
         env:
-          SUPABASE_URL: https://riwznqurcluudvyrkwxe.supabase.co
+          SUPABASE_URL: https://zasfgsgmbapnhfsnqsrp.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           AANVRAAG_ID: ${{ inputs.aanvraag_id }}
         run: python3 scripts/voortgang.py --id "$AANVRAAG_ID" --status gestart
@@ -42,41 +39,58 @@ jobs:
       - name: Controles draaien
         run: python3 scripts/test.py --offline
 
-      - name: Woordenlijst ophalen (OpenTaal)
-        env:
-          OPENTAAL_REF: ${{ inputs.opentaal_ref }}
+      # Brits Engels (spelling op -ise), uit SCOWL, via het Debian-pakket `wbritish`. Dat is
+      # geen losse download maar een pakket dat Ubuntu zelf beheert, dus er is geen URL die
+      # kan verdwijnen. De lijst bevat ook samentrekkingen ("don't") en bezit ("London's").
+      - name: Woordenlijst ophalen (Brits Engels, SCOWL via Debian)
         run: |
-          bron="https://raw.githubusercontent.com/OpenTaal/opentaal-wordlist/${OPENTAAL_REF}/wordlist.txt"
-          echo "Ophalen: $bron"
-          curl -sSfL "$bron" -o data/woordenlijst.txt
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq wbritish
+          echo "Versie: $(dpkg-query -W -f='${Version}' wbritish)"
+          lijst=/usr/share/dict/british-english
+          if [ ! -s "$lijst" ]; then
+            lijst=$(find /usr/share/dict -name 'british-english*' ! -name '*.dic' | head -1)
+          fi
+          echo "Gebruikt: $lijst"
+          cp "$lijst" data/woordenlijst.txt
           regels=$(wc -l < data/woordenlijst.txt)
+          gezien=$(sha256sum data/woordenlijst.txt | cut -d' ' -f1)
           echo "Regels: $regels"
-          echo "sha256: $(sha256sum data/woordenlijst.txt | cut -d' ' -f1)"
+          echo "sha256: $gezien"
           echo "Eerste regels:"; head -3 data/woordenlijst.txt
 
-          gezien=$(sha256sum data/woordenlijst.txt | cut -d' ' -f1)
-          verwacht=$(grep -v '^#' data/opentaal.sha256 | tr -d '[:space:]')
-          if [ "$gezien" != "$verwacht" ]; then
-            echo "::warning::OpenTaal heeft de woordenlijst gewijzigd."
-            echo "::warning::Vastgelegd: $verwacht"
-            echo "::warning::Nu opgehaald: $gezien"
-            echo "::warning::De crawl gaat door, maar toetst aan een andere lijst dan"
-            echo "::warning::de vorige keer. Klopt dat? Werk dan data/opentaal.sha256 bij."
-          else
-            echo "Woordenlijst is ongewijzigd ten opzichte van data/opentaal.sha256."
+          if [ "$regels" -lt 50000 ]; then
+            echo "::error::De woordenlijst heeft maar $regels regels. Dat klopt niet;"
+            echo "::error::verwacht zijn er ruim honderdduizend. Gestopt om onzin te voorkomen."
+            exit 1
           fi
 
-          if [ "$regels" -lt 100000 ]; then
-            echo "::error::De woordenlijst heeft maar $regels regels. Dat klopt niet;"
-            echo "::error::verwacht zijn er honderdduizenden. Gestopt om onzin te voorkomen."
-            exit 1
+          # Controle op de spelling: hoort bij Brits Engels met -ise. Een afwijking is een
+          # waarschuwing, geen fout: de lijst kan een variant bewust meenemen.
+          for woord in organise colour "don't" "London's"; do
+            grep -qxF "$woord" data/woordenlijst.txt || echo "::warning::'$woord' staat niet in de woordenlijst."
+          done
+          for woord in color; do
+            grep -qxF "$woord" data/woordenlijst.txt && echo "::warning::'$woord' (Amerikaans) staat wel in de woordenlijst."
+          done
+
+          verwacht=$(grep -v '^#' data/woordenlijst.sha256 | tr -d '[:space:]')
+          if [ -z "$verwacht" ]; then
+            echo "::notice::Nog geen sha256 vastgelegd. Zet deze regel in data/woordenlijst.sha256: $gezien"
+          elif [ "$gezien" != "$verwacht" ]; then
+            echo "::warning::De woordenlijst is gewijzigd (nieuwe versie van het pakket?)."
+            echo "::warning::Vastgelegd: $verwacht"
+            echo "::warning::Nu opgehaald: $gezien"
+            echo "::warning::De crawl gaat door. Klopt de nieuwe lijst? Werk dan data/woordenlijst.sha256 bij."
+          else
+            echo "Woordenlijst is ongewijzigd ten opzichte van data/woordenlijst.sha256."
           fi
 
       # De enige lijst met goedgekeurde woorden en namen (tabel `goedgekeurd`). Mislukt
       # dit, dan stopt de run: zonder die lijst is het resultaat niet te gebruiken.
       - name: Goedgekeurde woorden en namen ophalen
         env:
-          SUPABASE_URL: https://riwznqurcluudvyrkwxe.supabase.co
+          SUPABASE_URL: https://zasfgsgmbapnhfsnqsrp.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: python3 scripts/haal_goedgekeurd.py
 
@@ -103,7 +117,7 @@ jobs:
           BRON: ${{ inputs.bron }}
           AANVRAAG_ID: ${{ inputs.aanvraag_id }}
           # Voor de voortgangsbalk. Zonder aanvraag-id meldt de crawl niets.
-          SUPABASE_URL: https://riwznqurcluudvyrkwxe.supabase.co
+          SUPABASE_URL: https://zasfgsgmbapnhfsnqsrp.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           # Bewust buiten docs/: alles in die map wordt door GitHub Pages
@@ -119,7 +133,7 @@ jobs:
           # De project-URL is geen geheim: hij staat ook in docs/index.html, dat
           # publiek is. Hier ingevuld in plaats van als secret, zodat er maar
           # één ding echt geheim te beheren valt.
-          SUPABASE_URL: https://riwznqurcluudvyrkwxe.supabase.co
+          SUPABASE_URL: https://zasfgsgmbapnhfsnqsrp.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           AANVRAAG_ID: ${{ inputs.aanvraag_id }}
         run: |
@@ -137,7 +151,7 @@ jobs:
       - name: Voortgang op mislukt zetten
         if: failure() && inputs.aanvraag_id != ''
         env:
-          SUPABASE_URL: https://riwznqurcluudvyrkwxe.supabase.co
+          SUPABASE_URL: https://zasfgsgmbapnhfsnqsrp.supabase.co
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           AANVRAAG_ID: ${{ inputs.aanvraag_id }}
         run: python3 scripts/voortgang.py --id "$AANVRAAG_ID" --status mislukt

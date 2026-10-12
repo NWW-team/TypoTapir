@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""SpellingSpeurneus - zoekt spelfouten op een website, op verzoek.
+"""TypoTapir - zoekt spelfouten op een Engelstalige website, op verzoek.
 
 Draait op de standaardbibliotheek van Python. Geen pip install nodig.
 
     python3 scripts/crawl.py --bron demo --max-paginas 5
-    python3 scripts/crawl.py --bron reisadvies --max-paginas 10
+    python3 scripts/crawl.py --bron visa-the-netherlands --max-paginas 10
 """
 
 import argparse
@@ -23,19 +23,18 @@ from pathlib import Path
 from plaatsnamen import Plaatsnamen, samenvatting
 from voortgang import meld, run_url
 
-SITE = "https://www.nederlandwereldwijd.nl"
-PROJECT_URL = "https://github.com/NWW-team/SpellingSpeurneus"
-USER_AGENT = f"SpellingSpeurneus/0.1 (+{PROJECT_URL})"
+SITE = "https://www.netherlandsworldwide.nl"
+PROJECT_URL = "https://github.com/NWW-team/TypoTapir"
+USER_AGENT = f"TypoTapir/0.1 (+{PROJECT_URL})"
 
 # De delen van de site die je kunt kiezen. Een deel is een pad: alles daarachter hoort
-# erbij ("/reisadvies" en "/reisadvies/albanie", niet "/reisadvies-iets"). De pagina's
-# staan verspreid over de sitemaps van de site (de visumpagina's zitten in de grote
-# "paginas"-sitemap), dus we lezen ze allemaal en houden over wat onder het pad valt.
+# erbij ("/visa-the-netherlands" en "/visa-the-netherlands/short-stay", niet
+# "/visa-the-netherlands-iets"). De pagina's staan verspreid over de sitemaps van de site,
+# dus we lezen ze allemaal en houden over wat onder het pad valt.
+# LET OP: het pad is een aanname (alles dat met /visa-the-netherlands begint). Controleer het
+# bij de eerste crawl: het scherm en het logboek zeggen hoeveel URL's eronder vallen.
 DELEN = {
-    "reisadvies": "/reisadvies",
-    "visum-nederland": "/visum-nederland",
-    "caribisch-visum": "/caribisch-visum",
-    "ambassades": "/contact/ambassades-consulaten-generaal",
+    "visa-the-netherlands": "/visa-the-netherlands",
 }
 SITEMAP_INDEX = f"{SITE}/sitemap.xml"
 
@@ -183,7 +182,7 @@ def titel_uit(pagina_html):
 
 def lees_woordenlijst(pad):
     woorden = set()
-    with open(pad, encoding="utf-8") as bestand:
+    with open(pad, encoding="utf-8", errors="replace") as bestand:
         for regel in bestand:
             woord = regel.strip()
             if woord and not woord.startswith("#"):

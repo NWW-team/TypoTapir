@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SpellingSpeurneus</title>
+<title>TypoTapir</title>
 <link rel="icon" type="image/png" sizes="128x128" href="icoon.png">
 <style>
   /* Kleuren in de trant van de Rijkshuisstijl: donkerblauw, hemelblauw,
@@ -43,7 +43,7 @@
   /* Het icoon staat voor de titel; het is versiering, de titel zegt wat de app is. */
   .kop .titel { display: flex; align-items: center; gap: 18px; }
   .kop .logo { width: 88px; height: 88px; flex: none; }
-  /* Op een telefoon schaalt de titel mee met de breedte, anders is "SpellingSpeurneus" breder
+  /* Op een telefoon schaalt de titel mee met de breedte, anders is "TypoTapir" breder
      dan het scherm en schuift de pagina zijwaarts. */
   @media (max-width: 520px) {
     h1 { font-size: clamp(1.05rem, 6.4vw, 1.7rem); }
@@ -146,7 +146,7 @@
   <div class="omhulsel">
     <div class="titel">
       <img class="logo" src="icoon-groot.png" alt="" width="88" height="88">
-      <h1>SpellingSpeurneus</h1>
+      <h1>TypoTapir</h1>
     </div>
   </div>
 </header>
@@ -180,11 +180,11 @@
   <div class="kaart filters">
     <div class="filter">
       <label for="urlfilter">Filter op URL</label>
-      <input type="search" id="urlfilter" placeholder="bijvoorbeeld: /liechtenstein" autocomplete="off">
+      <input type="search" id="urlfilter" placeholder="bijvoorbeeld: /short-stay" autocomplete="off">
     </div>
     <div class="filter">
       <label for="woordfilter">Filter op woord</label>
-      <input type="search" id="woordfilter" placeholder="bijvoorbeeld: zakenrollers" autocomplete="off">
+      <input type="search" id="woordfilter" placeholder="bijvoorbeeld: recieve" autocomplete="off">
     </div>
   </div>
 
@@ -252,10 +252,10 @@
   </div><!-- /#app -->
 
   <footer>
-    Spelling getoetst aan de <a href="https://github.com/OpenTaal/opentaal-wordlist">OpenTaal-woordenlijst</a>
-    (Keurmerk Spelling van de Taalunie, licentie BSD/CC BY 3.0).
+    Spelling getoetst aan Brits Engels (-ise), uit <a href="http://wordlist.aspell.net">SCOWL</a>
+    (Spell Checker Oriented Word Lists).
     Plaatsnamen getoetst aan <a href="https://www.geonames.org">GeoNames</a> (licentie CC BY 4.0).
-    Code en uitleg staan in de <a href="https://github.com/NWW-team/SpellingSpeurneus">repository</a>.
+    Code en uitleg staan in de <a href="https://github.com/NWW-team/TypoTapir">repository</a>.
   </footer>
 
 </div>
@@ -269,8 +269,8 @@
 // repository. De "geheime link" is dus geen toegangscontrole; zie besluit 3 in
 // OVERDRACHT.md. Wat hier NOOIT in mag: het databasewachtwoord, een secret key
 // of de service-role key.
-const SUPABASE_URL = "https://riwznqurcluudvyrkwxe.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_8D0tbPlRD5eWqjIJDdQgKg_BxKn2Knx";
+const SUPABASE_URL = "https://zasfgsgmbapnhfsnqsrp.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_WnWQp-xG1GIiXMPtQUqZ8Q_hlskLRcm";
 
 // Geen sessie nodig: niets bewaren en geen tokens verversen.
 // Tijden schrijven we als "16.51 uur", zoals de redactie dat wil, niet als "16:51".
@@ -914,10 +914,8 @@ crawlKnop.addEventListener("click", async () => {
 
 // De delen van de site, in de volgorde van de keuzelijst bij "Nieuwe crawl".
 const DEEL_INFO = {
-  "reisadvies": { naam: "Reisadviezen", paginas: "±236" },
-  "visum-nederland": { naam: "Visum voor Nederland", paginas: "±1.015" },
-  "caribisch-visum": { naam: "Visum voor Caribische Koninkrijksdelen", paginas: "±452" },
-  "ambassades": { naam: "Ambassades en consulaten", paginas: "±219" },
+  // Het aantal pagina's is nog niet bekend; zet het hier na de eerste crawl.
+  "visa-the-netherlands": { naam: "Visa for the Netherlands", paginas: "?" },
 };
 const DELEN = Object.keys(DEEL_INFO);
 const deeltabsVak = document.getElementById("deeltabs");

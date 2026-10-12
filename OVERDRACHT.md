@@ -1,5 +1,11 @@
 # Overdracht
 
+> **TypoTapir** is een kopie van SpellingSpeurneus voor de Engelstalige site. Wat hieronder staat over
+> het Supabase-project, de Pages-link en de delen van de site is van het Nederlandse origineel. Voor
+> TypoTapir: Supabase-project `zasfgsgmbapnhfsnqsrp`, repository `NWW-team/TypoTapir`, één deel
+> (`visa-the-netherlands`), woordenlijst uit `wbritish`. Het pad van het deel is nog niet gecontroleerd
+> tegen de echte site.
+
 Wat een volgende sessie of collega moet weten om hier verder te kunnen. Voor hoe de app werkt voor
 wie hem gebruikt: zie [README.md](README.md). Voor het waarom: [STRATEGY.md](STRATEGY.md).
 
