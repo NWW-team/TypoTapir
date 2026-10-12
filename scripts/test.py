@@ -173,6 +173,12 @@ def main():
     controle("er is een deel met het gevraagde pad", DELEN == {"visa-the-netherlands": P}, str(DELEN))
     controle("een vertaling (.fr, .es, .de) is geen Engelse pagina",
              all(is_vertaling(SITE + P + "/waiting-time" + s) for s in (".fr", ".es", ".de")))
+    controle("een vertaling als laatste deel van het pad (/fr, /es, /de) telt ook",
+             all(is_vertaling(SITE + P + "/checklist-schengen-visa-seafarer" + s) for s in ("/fr", "/es", "/de", "/fr/"))
+             and is_vertaling(SITE + P + "/de"))
+    controle("een pad dat alleen op die letters lijkt is geen vertaling",
+             not is_vertaling(SITE + P + "/apply-fr") and not is_vertaling(SITE + P + "/frequently-asked")
+             and not is_vertaling(SITE + P + "/de/apply") and not is_vertaling(SITE + P + "/us"))
     controle("een gewone pagina is geen vertaling",
              not is_vertaling(SITE + P + "/short-stay/apply-nigeria") and not is_vertaling(SITE + P))
     voorbeeld = [SITE + p for p in (P + "/short-stay", "/about-us", P + "/short-stay", P,

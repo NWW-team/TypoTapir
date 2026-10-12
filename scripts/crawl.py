@@ -103,16 +103,20 @@ def valt_onder(url, pad):
     return eigen == pad or eigen.startswith(pad + "/")
 
 
-# De site zet vertalingen naast de Engelse pagina, met de taal als achtervoegsel:
-# ".../waiting-time-after-visa-application.fr". Het veld lang in de pagina zegt bij alle "en", dus
-# alleen de URL verraadt ze. Een Britse woordenlijst zou alle Franse, Spaanse en Duitse woorden als
-# fout melden, dus die pagina's slaan we over.
-VERTALING = re.compile(r"\.[a-z]{2}$")
+# De site zet vertalingen naast de Engelse pagina, op twee manieren:
+#   .../waiting-time-after-visa-application.fr    (de taal als achtervoegsel)
+#   .../checklist-schengen-visa-seafarer/fr       (de taal als laatste deel van het pad)
+# Het veld lang in de pagina zegt bij alle "en", dus alleen de URL verraadt ze. Een Britse
+# woordenlijst zou alle Franse, Spaanse en Duitse woorden als fout melden, dus die pagina's slaan we
+# over. Het tweede geval kennen we alleen bij deze talen, want een willekeurig deel van twee letters
+# kan ook een gewone pagina zijn.
+TALEN = ("fr", "es", "de")
+VERTALING = re.compile(r"\.[a-z]{2}$|/(?:" + "|".join(TALEN) + r")$")
 
 
 def is_vertaling(url):
-    """Of de URL een vertaling is (een achtervoegsel van twee letters, zoals .fr of .es)."""
-    return bool(VERTALING.search(urllib.parse.urlparse(url).path))
+    """Of de URL een vertaling is: .fr, .es, .de (of een andere taal) als achtervoegsel, of /fr, /es, /de."""
+    return bool(VERTALING.search(urllib.parse.urlparse(url).path.rstrip("/")))
 
 
 def urls_van_deel(urls, deel):
@@ -359,7 +363,7 @@ def verzamel_paginas(bron, max_paginas, pauze, bij_totaal=lambda n: None):
     urls = urls_van_deel(alle, bron)
     vertalingen = sum(1 for url in alle if valt_onder(url, DELEN[bron]) and is_vertaling(url))
     print(f"Deel {bron} ({DELEN[bron]}): {len(urls)} van de {len(alle)} URL's in de sitemaps, "
-          f"{vertalingen} vertalingen (.fr, .es, .de) overgeslagen.")
+          f"{vertalingen} vertalingen (.fr, .es, .de en /fr, /es, /de) overgeslagen.")
     if not urls:
         sys.exit(f"Geen enkele URL onder {DELEN[bron]} in de sitemaps. Is de site verbouwd? "
                  f"Controleer {SITEMAP_INDEX}.")
