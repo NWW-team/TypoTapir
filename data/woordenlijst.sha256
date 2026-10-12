@@ -2,3 +2,4 @@
 # De workflow waarschuwt als de lijst wijzigt, zodat een run niet stilletjes op andere spelling gaat
 # toetsen. Na de eerste run staat de sha256 in het logboek ("Nog geen sha256 vastgelegd"): zet die
 # onder deze regels, zonder #.
+7424d6682301dc86f73b0a5c8c53f0ba4c9f0a41fb2d1cb7e5fe7f8a04f15fb0
