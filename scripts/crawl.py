@@ -103,9 +103,22 @@ def valt_onder(url, pad):
     return eigen == pad or eigen.startswith(pad + "/")
 
 
+# De site zet vertalingen naast de Engelse pagina, met de taal als achtervoegsel:
+# ".../waiting-time-after-visa-application.fr". Het veld lang in de pagina zegt bij alle "en", dus
+# alleen de URL verraadt ze. Een Britse woordenlijst zou alle Franse, Spaanse en Duitse woorden als
+# fout melden, dus die pagina's slaan we over.
+VERTALING = re.compile(r"\.[a-z]{2}$")
+
+
+def is_vertaling(url):
+    """Of de URL een vertaling is (een achtervoegsel van twee letters, zoals .fr of .es)."""
+    return bool(VERTALING.search(urllib.parse.urlparse(url).path))
+
+
 def urls_van_deel(urls, deel):
-    """De URL's van één deel van de site, zonder dubbelen, in volgorde van de sitemaps."""
-    return list(dict.fromkeys(url for url in urls if valt_onder(url, DELEN[deel])))
+    """De Engelse URL's van één deel van de site, zonder dubbelen, in volgorde van de sitemaps."""
+    return list(dict.fromkeys(url for url in urls
+                              if valt_onder(url, DELEN[deel]) and not is_vertaling(url)))
 
 
 def naar_patroon(pad):
@@ -344,7 +357,9 @@ def verzamel_paginas(bron, max_paginas, pauze, bij_totaal=lambda n: None):
     mag_ophalen = maak_robots_controle()
     alle = alle_sitemap_urls(0)
     urls = urls_van_deel(alle, bron)
-    print(f"Deel {bron} ({DELEN[bron]}): {len(urls)} van de {len(alle)} URL's in de sitemaps.")
+    vertalingen = sum(1 for url in alle if valt_onder(url, DELEN[bron]) and is_vertaling(url))
+    print(f"Deel {bron} ({DELEN[bron]}): {len(urls)} van de {len(alle)} URL's in de sitemaps, "
+          f"{vertalingen} vertalingen (.fr, .es, .de) overgeslagen.")
     if not urls:
         sys.exit(f"Geen enkele URL onder {DELEN[bron]} in de sitemaps. Is de site verbouwd? "
                  f"Controleer {SITEMAP_INDEX}.")

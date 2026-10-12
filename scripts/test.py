@@ -18,7 +18,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from plaatsnamen import Plaatsnamen, afstand, samenvatting, tokens  # noqa: E402
 from voortgang import meld  # noqa: E402
-from crawl import (DELEN, SITE, alle_sitemap_urls, is_bekend, urls_van_deel, valt_onder, verplaats_namen, lees_goedgekeurd,  # noqa: E402
+from crawl import (DELEN, SITE, alle_sitemap_urls, is_bekend, is_vertaling, urls_van_deel, valt_onder, verplaats_namen, lees_goedgekeurd,  # noqa: E402
                    maak_robots_controle, naar_patroon, soort_van, tekst_uit_main,
                    zoek_fouten)
 
@@ -171,7 +171,12 @@ def main():
     controle("diep onderliggende pagina's horen erbij",
              valt_onder(SITE + P + "/short-stay/tourism/apply", P))
     controle("er is een deel met het gevraagde pad", DELEN == {"visa-the-netherlands": P}, str(DELEN))
-    voorbeeld = [SITE + p for p in (P + "/short-stay", "/about-us", P + "/short-stay", P)]
+    controle("een vertaling (.fr, .es, .de) is geen Engelse pagina",
+             all(is_vertaling(SITE + P + "/waiting-time" + s) for s in (".fr", ".es", ".de")))
+    controle("een gewone pagina is geen vertaling",
+             not is_vertaling(SITE + P + "/short-stay/apply-nigeria") and not is_vertaling(SITE + P))
+    voorbeeld = [SITE + p for p in (P + "/short-stay", "/about-us", P + "/short-stay", P,
+                                     P + "/short-stay.fr", P + "/short-stay.es")]
     gevonden = urls_van_deel(voorbeeld, "visa-the-netherlands")
     controle("een deel kiest zijn pagina's, zonder dubbelen",
              gevonden == [SITE + P + "/short-stay", SITE + P], str(gevonden))

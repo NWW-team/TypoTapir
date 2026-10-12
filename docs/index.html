@@ -914,8 +914,8 @@ crawlKnop.addEventListener("click", async () => {
 
 // De delen van de site, in de volgorde van de keuzelijst bij "Nieuwe crawl".
 const DEEL_INFO = {
-  // Het aantal pagina's is nog niet bekend; zet het hier na de eerste crawl.
-  "visa-the-netherlands": { naam: "Visa for the Netherlands", paginas: "?" },
+  // Alleen de Engelse pagina's: de vertalingen (.fr, .es, .de) worden overgeslagen.
+  "visa-the-netherlands": { naam: "Visa for the Netherlands", paginas: "±1.038" },
 };
 const DELEN = Object.keys(DEEL_INFO);
 const deeltabsVak = document.getElementById("deeltabs");
