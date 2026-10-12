@@ -1,0 +1,4 @@
+# De woordenlijst zoals wij die gebruiken: Brits Engels (-ise), SCOWL via het Debian-pakket wbritish.
+# De workflow waarschuwt als de lijst wijzigt, zodat een run niet stilletjes op andere spelling gaat
+# toetsen. Na de eerste run staat de sha256 in het logboek ("Nog geen sha256 vastgelegd"): zet die
+# onder deze regels, zonder #.

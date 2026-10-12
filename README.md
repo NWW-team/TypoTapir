@@ -1,4 +1,11 @@
-# SpellingSpeurneus
+# TypoTapir
+
+> **TypoTapir is de Engelstalige variant van [SpellingSpeurneus](https://github.com/NWW-team/SpellingSpeurneus)**
+> en zoekt spelfouten op [netherlandsworldwide.nl](https://www.netherlandsworldwide.nl) (Brits Engels, -ise).
+> De rest van dit document is nog van het Nederlandse origineel: waar het over nederlandwereldwijd.nl,
+> OpenTaal, de delen "reisadvies" of "visum-nederland" gaat, geldt voor TypoTapir `netherlandsworldwide.nl`,
+> SCOWL (via het pakket `wbritish`) en het ene deel `visa-the-netherlands`. De werkwijze en de opbouw zijn gelijk.
+
 
 Zoekt spelfouten op [nederlandwereldwijd.nl](https://www.nederlandwereldwijd.nl),
 wanneer de webredacteur daarom vraagt. Zie [STRATEGY.md](STRATEGY.md) voor het waarom

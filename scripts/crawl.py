@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""SpellingSpeurneus - zoekt spelfouten op een website, op verzoek.
+"""TypoTapir - zoekt spelfouten op een Engelstalige website, op verzoek.
 
 Draait op de standaardbibliotheek van Python. Geen pip install nodig.
 
     python3 scripts/crawl.py --bron demo --max-paginas 5
-    python3 scripts/crawl.py --bron reisadvies --max-paginas 10
+    python3 scripts/crawl.py --bron visa-the-netherlands --max-paginas 10
 """
 
 import argparse
@@ -23,19 +23,18 @@ from pathlib import Path
 from plaatsnamen import Plaatsnamen, samenvatting
 from voortgang import meld, run_url
 
-SITE = "https://www.nederlandwereldwijd.nl"
-PROJECT_URL = "https://github.com/NWW-team/SpellingSpeurneus"
-USER_AGENT = f"SpellingSpeurneus/0.1 (+{PROJECT_URL})"
+SITE = "https://www.netherlandsworldwide.nl"
+PROJECT_URL = "https://github.com/NWW-team/TypoTapir"
+USER_AGENT = f"TypoTapir/0.1 (+{PROJECT_URL})"
 
 # De delen van de site die je kunt kiezen. Een deel is een pad: alles daarachter hoort
-# erbij ("/reisadvies" en "/reisadvies/albanie", niet "/reisadvies-iets"). De pagina's
-# staan verspreid over de sitemaps van de site (de visumpagina's zitten in de grote
-# "paginas"-sitemap), dus we lezen ze allemaal en houden over wat onder het pad valt.
+# erbij ("/visa-the-netherlands" en "/visa-the-netherlands/short-stay", niet
+# "/visa-the-netherlands-iets"). De pagina's staan verspreid over de sitemaps van de site,
+# dus we lezen ze allemaal en houden over wat onder het pad valt.
+# LET OP: het pad is een aanname (alles dat met /visa-the-netherlands begint). Controleer het
+# bij de eerste crawl: het scherm en het logboek zeggen hoeveel URL's eronder vallen.
 DELEN = {
-    "reisadvies": "/reisadvies",
-    "visum-nederland": "/visum-nederland",
-    "caribisch-visum": "/caribisch-visum",
-    "ambassades": "/contact/ambassades-consulaten-generaal",
+    "visa-the-netherlands": "/visa-the-netherlands",
 }
 SITEMAP_INDEX = f"{SITE}/sitemap.xml"
 
@@ -104,9 +103,22 @@ def valt_onder(url, pad):
     return eigen == pad or eigen.startswith(pad + "/")
 
 
+# De site zet vertalingen naast de Engelse pagina, met de taal als achtervoegsel:
+# ".../waiting-time-after-visa-application.fr". Het veld lang in de pagina zegt bij alle "en", dus
+# alleen de URL verraadt ze. Een Britse woordenlijst zou alle Franse, Spaanse en Duitse woorden als
+# fout melden, dus die pagina's slaan we over.
+VERTALING = re.compile(r"\.[a-z]{2}$")
+
+
+def is_vertaling(url):
+    """Of de URL een vertaling is (een achtervoegsel van twee letters, zoals .fr of .es)."""
+    return bool(VERTALING.search(urllib.parse.urlparse(url).path))
+
+
 def urls_van_deel(urls, deel):
-    """De URL's van één deel van de site, zonder dubbelen, in volgorde van de sitemaps."""
-    return list(dict.fromkeys(url for url in urls if valt_onder(url, DELEN[deel])))
+    """De Engelse URL's van één deel van de site, zonder dubbelen, in volgorde van de sitemaps."""
+    return list(dict.fromkeys(url for url in urls
+                              if valt_onder(url, DELEN[deel]) and not is_vertaling(url)))
 
 
 def naar_patroon(pad):
@@ -183,7 +195,7 @@ def titel_uit(pagina_html):
 
 def lees_woordenlijst(pad):
     woorden = set()
-    with open(pad, encoding="utf-8") as bestand:
+    with open(pad, encoding="utf-8", errors="replace") as bestand:
         for regel in bestand:
             woord = regel.strip()
             if woord and not woord.startswith("#"):
@@ -345,7 +357,9 @@ def verzamel_paginas(bron, max_paginas, pauze, bij_totaal=lambda n: None):
     mag_ophalen = maak_robots_controle()
     alle = alle_sitemap_urls(0)
     urls = urls_van_deel(alle, bron)
-    print(f"Deel {bron} ({DELEN[bron]}): {len(urls)} van de {len(alle)} URL's in de sitemaps.")
+    vertalingen = sum(1 for url in alle if valt_onder(url, DELEN[bron]) and is_vertaling(url))
+    print(f"Deel {bron} ({DELEN[bron]}): {len(urls)} van de {len(alle)} URL's in de sitemaps, "
+          f"{vertalingen} vertalingen (.fr, .es, .de) overgeslagen.")
     if not urls:
         sys.exit(f"Geen enkele URL onder {DELEN[bron]} in de sitemaps. Is de site verbouwd? "
                  f"Controleer {SITEMAP_INDEX}.")

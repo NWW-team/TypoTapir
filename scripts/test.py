@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Controles voor SpellingSpeurneus.
+"""Controles voor TypoTapir.
 
     python3 scripts/test.py          # alles, inclusief robots.txt (netwerk nodig)
     python3 scripts/test.py --offline  # alleen de controles zonder netwerk
@@ -18,7 +18,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from plaatsnamen import Plaatsnamen, afstand, samenvatting, tokens  # noqa: E402
 from voortgang import meld  # noqa: E402
-from crawl import (DELEN, SITE, alle_sitemap_urls, is_bekend, urls_van_deel, valt_onder, verplaats_namen, lees_goedgekeurd,  # noqa: E402
+from crawl import (DELEN, SITE, alle_sitemap_urls, is_bekend, is_vertaling, urls_van_deel, valt_onder, verplaats_namen, lees_goedgekeurd,  # noqa: E402
                    maak_robots_controle, naar_patroon, soort_van, tekst_uit_main,
                    zoek_fouten)
 
@@ -143,10 +143,10 @@ def main():
         subprocess.run([sys.executable, str(WORTEL / "scripts" / "voortgang.py"), "--id", "7",
                         "--status", "gestart"], check=True, capture_output=True,
                        env={**os.environ, "GITHUB_SERVER_URL": "https://github.com",
-                            "GITHUB_REPOSITORY": "NWW-team/SpellingSpeurneus", "GITHUB_RUN_ID": "555"})
+                            "GITHUB_REPOSITORY": "NWW-team/TypoTapir", "GITHUB_RUN_ID": "555"})
         controle("gestart legt alleen de link naar de run vast",
                  ontvangen and ontvangen[0][1].get("run_url") ==
-                 "https://github.com/NWW-team/SpellingSpeurneus/actions/runs/555"
+                 "https://github.com/NWW-team/TypoTapir/actions/runs/555"
                  and "status" not in ontvangen[0][1], str(ontvangen[:1]))
         os.environ["SUPABASE_URL"] = "http://127.0.0.1:1"
         controle("een onbereikbare server stopt niets, het geeft False",
@@ -160,34 +160,34 @@ def main():
                 os.environ[k] = v
 
     print("\nDelen van de site")
-    controle("het pad zelf hoort erbij", valt_onder(SITE + "/reisadvies", "/reisadvies"))
-    controle("alles daarachter hoort erbij", valt_onder(SITE + "/reisadvies/albanie", "/reisadvies"))
-    controle("een slotstreep maakt niet uit", valt_onder(SITE + "/reisadvies/", "/reisadvies"))
-    controle("een query telt niet mee", valt_onder(SITE + "/visum-nederland?a=1", "/visum-nederland"))
+    P = "/visa-the-netherlands"
+    controle("het pad zelf hoort erbij", valt_onder(SITE + P, P))
+    controle("alles daarachter hoort erbij", valt_onder(SITE + P + "/short-stay", P))
+    controle("een slotstreep maakt niet uit", valt_onder(SITE + P + "/", P))
+    controle("een query telt niet mee", valt_onder(SITE + P + "?a=1", P))
     controle("een ander pad met dezelfde beginletters hoort er niet bij",
-             not valt_onder(SITE + "/reisadvies-iets", "/reisadvies"))
-    controle("een ander deel hoort er niet bij", not valt_onder(SITE + "/visum-nederland/x", "/caribisch-visum"))
+             not valt_onder(SITE + P + "-something", P))
+    controle("een ander deel hoort er niet bij", not valt_onder(SITE + "/about-us", P))
     controle("diep onderliggende pagina's horen erbij",
-             valt_onder(SITE + "/contact/ambassades-consulaten-generaal/afghanistan/kabul",
-                        "/contact/ambassades-consulaten-generaal"))
-    controle("er zijn vier delen met de gevraagde paden",
-             DELEN == {"reisadvies": "/reisadvies", "visum-nederland": "/visum-nederland",
-                       "caribisch-visum": "/caribisch-visum",
-                       "ambassades": "/contact/ambassades-consulaten-generaal"}, str(DELEN))
-    voorbeeld = [SITE + p for p in ("/reisadvies/albanie", "/visum-nederland/schengenvisum",
-                                     "/caribisch-visum/kort-verblijf/a", "/reisadvies/albanie",
-                                     "/reisadvies", "/over-ons")]
-    gevonden = urls_van_deel(voorbeeld, "reisadvies")
+             valt_onder(SITE + P + "/short-stay/tourism/apply", P))
+    controle("er is een deel met het gevraagde pad", DELEN == {"visa-the-netherlands": P}, str(DELEN))
+    controle("een vertaling (.fr, .es, .de) is geen Engelse pagina",
+             all(is_vertaling(SITE + P + "/waiting-time" + s) for s in (".fr", ".es", ".de")))
+    controle("een gewone pagina is geen vertaling",
+             not is_vertaling(SITE + P + "/short-stay/apply-nigeria") and not is_vertaling(SITE + P))
+    voorbeeld = [SITE + p for p in (P + "/short-stay", "/about-us", P + "/short-stay", P,
+                                     P + "/short-stay.fr", P + "/short-stay.es")]
+    gevonden = urls_van_deel(voorbeeld, "visa-the-netherlands")
     controle("een deel kiest zijn pagina's, zonder dubbelen",
-             gevonden == [SITE + "/reisadvies/albanie", SITE + "/reisadvies"], str(gevonden))
+             gevonden == [SITE + P + "/short-stay", SITE + P], str(gevonden))
 
     # De sitemap-index en de sitemaps daarin, via een lokale nagemaakte server
     paginas = {
         "/sitemap.xml": "<sitemapindex><sitemap><loc>{b}/a.xml</loc></sitemap>"
                         "<sitemap><loc>{b}/b.xml</loc></sitemap></sitemapindex>",
-        "/a.xml": "<urlset><url><loc>https://x.nl/visum-nederland/1</loc></url>"
-                  "<url><loc>https://x.nl/reisadvies</loc></url></urlset>",
-        "/b.xml": "<urlset><url><loc>https://x.nl/visum-nederland/2</loc></url></urlset>",
+        "/a.xml": "<urlset><url><loc>https://x.nl/visa-the-netherlands/1</loc></url>"
+                  "<url><loc>https://x.nl/about-us</loc></url></urlset>",
+        "/b.xml": "<urlset><url><loc>https://x.nl/visa-the-netherlands/2</loc></url></urlset>",
     }
 
     class Nepsite(BaseHTTPRequestHandler):
@@ -207,8 +207,8 @@ def main():
         verzameld = alle_sitemap_urls(0, f"http://127.0.0.1:{nepsite.server_port}/sitemap.xml")
         controle("alle sitemaps uit de index worden gelezen", len(verzameld) == 3, str(verzameld))
         controle("de URL's van een deel komen uit meerdere sitemaps",
-                 urls_van_deel(verzameld, "visum-nederland") ==
-                 ["https://x.nl/visum-nederland/1", "https://x.nl/visum-nederland/2"])
+                 urls_van_deel(verzameld, "visa-the-netherlands") ==
+                 ["https://x.nl/visa-the-netherlands/1", "https://x.nl/visa-the-netherlands/2"])
     finally:
         nepsite.shutdown()
 
@@ -377,6 +377,17 @@ def main():
                  "".join(r.find("m:t", ns).text for r in stukken) == "Dat is nieet & <co goed.")
     else:
         print("  (Node ontbreekt: de controles op het Excel-bestand zijn overgeslagen)")
+
+    print("\nEngelse tekst")
+    engels = {"don't", "forget", "visa", "you", "may", "need", "a", "london", "countries",
+              "well-known", "receive", "it's"}
+    engels |= {w.lower() for w in engels}
+    gemeld = [b["woord"] for b in zoek_fouten(
+        "Don\u2019t forget: you may need a visa. London\u2019s visa rules; countries\u2019 visa; "
+        "a well-known visa. It\u2019s fine to recieve.", engels)]
+    controle("samentrekkingen, bezit en koppeltekens uit de lijst zijn geen fout",
+             not any(w in gemeld for w in ("Don't", "London's", "countries", "well-known", "It's")), str(gemeld))
+    controle("een Engelse typefout wordt gemeld", "recieve" in gemeld, str(gemeld))
 
     print("\nNamen die als spelfout zijn aangewezen")
     bev = [{"woord": "Hairi", "soort": "naam"}, {"woord": "hairi", "soort": "naam"},

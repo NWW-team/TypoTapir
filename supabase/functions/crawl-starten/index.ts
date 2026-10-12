@@ -8,9 +8,9 @@
 // nooit in de browser. Het heeft alleen Actions: schrijven op deze repository nodig.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const REPO = "NWW-team/SpellingSpeurneus";
+const REPO = "NWW-team/TypoTapir";
 const WORKFLOW = "crawl.yml";
-const BRONNEN = ["reisadvies", "visum-nederland", "caribisch-visum", "ambassades"];
+const BRONNEN = ["visa-the-netherlands"];
 const MAX_PAGINAS = 5000;
 const KOP = {
   "Access-Control-Allow-Origin": "*",
@@ -58,9 +58,9 @@ Deno.serve(async (verzoek) => {
       Authorization: `Bearer ${token}`,
       Accept: "application/vnd.github+json",
       "X-GitHub-Api-Version": "2022-11-28",
-      "User-Agent": "SpellingSpeurneus",
+      "User-Agent": "TypoTapir",
     },
-    // GitHub wil alle inputs als tekst. opentaal_ref blijft op de standaardwaarde. De workflow
+    // GitHub wil alle inputs als tekst. De workflow
     // kent geen maximumaantal pagina's meer (een crawl pakt het hele deel); een input die de
     // workflow niet kent wordt door GitHub geweigerd. aanvraag_id laat de crawler zijn
     // voortgang aan deze rij melden en maakt de crawl stopbaar.
