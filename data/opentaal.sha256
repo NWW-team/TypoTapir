@@ -1,0 +1,6 @@
+# De OpenTaal-woordenlijst zoals wij die gebruiken.
+# Vastgelegd na de eerste geslaagde run op 14 september 2026: 413.937 woorden.
+# De workflow waarschuwt als OpenTaal de lijst wijzigt, zodat een run niet
+# stilletjes op andere spelling gaat toetsen. Klopt de nieuwe lijst? Vervang
+# dan deze regel door de sha256 die de run afdrukt.
+12e5fb5e3c73840b583b30016926d1f63a75e9bf1652a3a6634b2ba7c49ad7be

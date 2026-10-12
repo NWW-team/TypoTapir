@@ -1,0 +1,143 @@
+name: Crawl
+
+# De redacteur start een crawl zelf, via de knop "Run workflow".
+# Er draait niets automatisch op de achtergrond.
+on:
+  workflow_dispatch:
+    inputs:
+      bron:
+        description: "Welk deel van de site"
+        type: choice
+        default: reisadvies
+        options: [demo, reisadvies, visum-nederland, caribisch-visum, ambassades]
+      aanvraag_id:
+        description: "Id van de aanvraag in Supabase (door het scherm ingevuld, voor de voortgangsbalk)"
+        default: ""
+      opentaal_ref:
+        description: "Versie van de OpenTaal-woordenlijst (tag of commit)"
+        default: "master"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: crawl-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Legt de link naar deze run vast bij de aanvraag, zodat het scherm de crawl kan stoppen.
+      - name: Run koppelen aan de aanvraag
+        if: inputs.aanvraag_id != ''
+        env:
+          SUPABASE_URL: https://riwznqurcluudvyrkwxe.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          AANVRAAG_ID: ${{ inputs.aanvraag_id }}
+        run: python3 scripts/voortgang.py --id "$AANVRAAG_ID" --status gestart
+
+      - name: Controles draaien
+        run: python3 scripts/test.py --offline
+
+      - name: Woordenlijst ophalen (OpenTaal)
+        env:
+          OPENTAAL_REF: ${{ inputs.opentaal_ref }}
+        run: |
+          bron="https://raw.githubusercontent.com/OpenTaal/opentaal-wordlist/${OPENTAAL_REF}/wordlist.txt"
+          echo "Ophalen: $bron"
+          curl -sSfL "$bron" -o data/woordenlijst.txt
+          regels=$(wc -l < data/woordenlijst.txt)
+          echo "Regels: $regels"
+          echo "sha256: $(sha256sum data/woordenlijst.txt | cut -d' ' -f1)"
+          echo "Eerste regels:"; head -3 data/woordenlijst.txt
+
+          gezien=$(sha256sum data/woordenlijst.txt | cut -d' ' -f1)
+          verwacht=$(grep -v '^#' data/opentaal.sha256 | tr -d '[:space:]')
+          if [ "$gezien" != "$verwacht" ]; then
+            echo "::warning::OpenTaal heeft de woordenlijst gewijzigd."
+            echo "::warning::Vastgelegd: $verwacht"
+            echo "::warning::Nu opgehaald: $gezien"
+            echo "::warning::De crawl gaat door, maar toetst aan een andere lijst dan"
+            echo "::warning::de vorige keer. Klopt dat? Werk dan data/opentaal.sha256 bij."
+          else
+            echo "Woordenlijst is ongewijzigd ten opzichte van data/opentaal.sha256."
+          fi
+
+          if [ "$regels" -lt 100000 ]; then
+            echo "::error::De woordenlijst heeft maar $regels regels. Dat klopt niet;"
+            echo "::error::verwacht zijn er honderdduizenden. Gestopt om onzin te voorkomen."
+            exit 1
+          fi
+
+      # De enige lijst met goedgekeurde woorden en namen (tabel `goedgekeurd`). Mislukt
+      # dit, dan stopt de run: zonder die lijst is het resultaat niet te gebruiken.
+      - name: Goedgekeurde woorden en namen ophalen
+        env:
+          SUPABASE_URL: https://riwznqurcluudvyrkwxe.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: python3 scripts/haal_goedgekeurd.py
+
+      # Plaatsnamen uit GeoNames (CC BY 4.0), om verkeerd gespelde plaatsen bij de namen
+      # te vinden. Mislukt dit, dan krijgen namen geen oordeel en gaat de crawl gewoon
+      # door: het is een hulp, geen voorwaarde.
+      - name: Plaatsnamen ophalen (GeoNames)
+        run: |
+          mkdir -p data/geonames
+          base=https://download.geonames.org/export/dump
+          if curl -sSfL "$base/cities1000.zip" -o data/geonames/cities1000.zip \
+             && curl -sSfL "$base/admin1CodesASCII.txt" -o data/geonames/admin1CodesASCII.txt \
+             && curl -sSfL "$base/countryInfo.txt" -o data/geonames/countryInfo.txt \
+             && [ "$(stat -c %s data/geonames/cities1000.zip)" -gt 1000000 ]; then
+            ls -l data/geonames
+          else
+            echo "::warning::GeoNames ophalen mislukte of gaf een te klein bestand."
+            echo "::warning::De crawl gaat door; namen krijgen geen oordeel over hun spelling."
+            rm -rf data/geonames
+          fi
+
+      - name: Crawlen en spelling toetsen
+        env:
+          BRON: ${{ inputs.bron }}
+          AANVRAAG_ID: ${{ inputs.aanvraag_id }}
+          # Voor de voortgangsbalk. Zonder aanvraag-id meldt de crawl niets.
+          SUPABASE_URL: https://riwznqurcluudvyrkwxe.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          # Bewust buiten docs/: alles in die map wordt door GitHub Pages
+          # publiek uitgeleverd. Het resultaat gaat naar Supabase.
+          python3 scripts/crawl.py --bron "$BRON" \
+            --aanvraag-id "$AANVRAAG_ID" --uit resultaten.json
+
+      # Het resultaat werd hier eerder in deze publieke repository gecommit en
+      # was daarmee voor iedereen te lezen. Nu gaat het naar Supabase, waar de
+      # RLS-policies het alleen aan toegestane accounts vrijgeven.
+      - name: Resultaat naar Supabase
+        env:
+          # De project-URL is geen geheim: hij staat ook in docs/index.html, dat
+          # publiek is. Hier ingevuld in plaats van als secret, zodat er maar
+          # één ding echt geheim te beheren valt.
+          SUPABASE_URL: https://riwznqurcluudvyrkwxe.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          AANVRAAG_ID: ${{ inputs.aanvraag_id }}
+        run: |
+          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::error::Het secret SUPABASE_SERVICE_ROLE_KEY staat niet in deze"
+            echo "::error::repository, dus het resultaat kan niet worden gepubliceerd."
+            echo "::error::Zet hem bij Settings > Secrets and variables > Actions."
+            echo "::error::De waarde staat in het Supabase-dashboard onder"
+            echo "::error::Project Settings > API Keys. Zie ook README.md."
+            exit 1
+          fi
+          python3 scripts/publiceer.py --in resultaten.json --aanvraag-id "$AANVRAAG_ID"
+
+      # Mislukt er iets, dan moet het scherm dat weten en de dag vrijkomen.
+      - name: Voortgang op mislukt zetten
+        if: failure() && inputs.aanvraag_id != ''
+        env:
+          SUPABASE_URL: https://riwznqurcluudvyrkwxe.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          AANVRAAG_ID: ${{ inputs.aanvraag_id }}
+        run: python3 scripts/voortgang.py --id "$AANVRAAG_ID" --status mislukt

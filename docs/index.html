@@ -1,0 +1,1036 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SpellingSpeurneus</title>
+<link rel="icon" type="image/png" sizes="128x128" href="icoon.png">
+<style>
+  /* Kleuren in de trant van de Rijkshuisstijl: donkerblauw, hemelblauw,
+     lichtblauw en het gele accent. Benaderd, niet de officiële tokens - die
+     staan in nl-design-system/rijkshuisstijl-community. Bewust géén logo,
+     woordmerk of het Rijksoverheid-lettertype: dit is een hulpmiddel voor de
+     redactie, geen officiële pagina van de Rijksoverheid.
+     Elke tekstkleur is op WCAG AA-contrast getoetst tegen zijn achtergrond. */
+  :root {
+    --donkerblauw: #154273; --hemelblauw: #007BC7; --lichtblauw: #8FCAE7;
+    --inkt: #1a1a1a; --gedempt: #535353; --lijn: #d4d9e0;
+    --grond: #f0f2f5; --vlak: #ffffff;
+    --accent: var(--donkerblauw); --tabrand: var(--hemelblauw);
+    --markering: #fcf3a5; --waarschuwing: #D52B1E;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --inkt: #e8eaed; --gedempt: #a7b0ba; --lijn: #3a4048;
+      --grond: #1b1e22; --vlak: #24282e;
+      --accent: var(--lichtblauw); --tabrand: var(--lichtblauw);
+      --markering: #4a4318;
+      /* Het rood van de huisstijl haalt op een donker vlak geen AA-contrast;
+         deze lichtere tint wel (5,2:1). */
+      --waarschuwing: #F27166;
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--grond); color: var(--inkt);
+         font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Arial, sans-serif; }
+  .omhulsel { max-width: 1000px; margin: 0 auto; padding: 24px 16px 64px; }
+  /* De donkerblauwe balk is het meest herkenbare element van de huisstijl. */
+  .kop { background: var(--donkerblauw); color: #fff;
+         border-bottom: 4px solid var(--hemelblauw); }
+  .kop .omhulsel { padding-block: 20px; }
+  h1 { font-size: 2.25rem; line-height: 1.15; margin: 0; }
+  /* Het icoon staat voor de titel; het is versiering, de titel zegt wat de app is. */
+  .kop .titel { display: flex; align-items: center; gap: 18px; }
+  .kop .logo { width: 88px; height: 88px; flex: none; }
+  /* Op een telefoon schaalt de titel mee met de breedte, anders is "SpellingSpeurneus" breder
+     dan het scherm en schuift de pagina zijwaarts. */
+  @media (max-width: 520px) {
+    h1 { font-size: clamp(1.05rem, 6.4vw, 1.7rem); }
+    .kop .titel { gap: 14px; }
+    .kop .logo { width: 56px; height: 56px; }
+  }
+  .kaart { background: var(--vlak); border: 1px solid var(--lijn);
+           border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+  .feiten { display: flex; flex-wrap: wrap; gap: 24px; }
+  .feit strong { display: block; font-size: 1.5rem; line-height: 1.2;
+                 color: var(--accent); }
+  .feit span { color: var(--gedempt); font-size: .85rem; }
+  .filters { display: flex; flex-wrap: wrap; gap: 12px; }
+  .filter { flex: 1 1 220px; }
+  label { display: block; font-size: .85rem; color: var(--gedempt); margin-bottom: 4px; }
+  input[type=search], input[type=number], select {
+    width: 100%; padding: 9px 10px; font-size: 1rem;
+    border: 1px solid var(--lijn); border-radius: 6px;
+    background: var(--grond); color: var(--inkt); }
+  input:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .tabbladen { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 12px; }
+  .tabblad, .deeltab { font-size: .95rem; padding: 8px 14px; border-radius: 6px;
+    background: transparent; border: 1px solid transparent; color: var(--gedempt); }
+  .tabblad[aria-selected="true"], .deeltab[aria-selected="true"] { background: var(--vlak); border-color: var(--lijn);
+    color: var(--inkt); font-weight: 600;
+    border-bottom: 3px solid var(--tabrand); border-radius: 6px 6px 0 0; }
+  .tabblad .aantal { color: var(--gedempt); font-weight: 400; }
+  .uitleg { color: var(--gedempt); font-size: .9rem; margin: 0 0 16px; }
+  .tabelhouder { overflow-x: auto; }
+  .telling { display: block; color: var(--gedempt); }
+  table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+  th { text-align: left; font-size: .8rem; text-transform: uppercase;
+       letter-spacing: .04em; color: var(--gedempt); font-weight: 600;
+       border-bottom: 1px solid var(--lijn); padding: 8px 10px; }
+  td { border-bottom: 1px solid var(--lijn); padding: 10px; vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  .woord { font-weight: 600; white-space: nowrap; }
+  .merk { display: block; margin-top: 2px; font-size: .75rem; font-weight: 600;
+          white-space: nowrap; color: var(--waarschuwing); }
+  tr.sjabloon td { border-left: 3px solid var(--waarschuwing); }
+  tr.sjabloon td:not(:first-child) { border-left: 0; }
+  .feit strong.alarm { color: var(--waarschuwing); }
+  .context mark { background: var(--markering); color: var(--inkt);
+                  font-weight: 600; padding: 0 2px; border-radius: 2px; }
+  .bron a { color: var(--accent); word-break: break-word; }
+  .bron small { display: block; color: var(--gedempt); }
+  button { font: inherit; font-size: .8rem; padding: 4px 8px; cursor: pointer;
+    border: 1px solid var(--lijn); border-radius: 5px;
+    background: var(--grond); color: var(--accent); white-space: nowrap; }
+  button:hover { border-color: var(--accent); background: var(--vlak); }
+  .melding { color: var(--gedempt); padding: 24px 10px; text-align: center; }
+  footer { color: var(--gedempt); font-size: .85rem; margin-top: 32px;
+           border-top: 1px solid var(--lijn); padding-top: 16px; }
+  footer a { color: var(--accent); }
+  h2 { font-size: 1.15rem; margin: 0 0 8px; }
+  .fout { color: #a3110f; background: #fdeceb; border: 1px solid #f5c2c0;
+          border-radius: 6px; padding: 9px 11px; margin: 0 0 16px;
+          font-size: .9rem; }
+  @media (prefers-color-scheme: dark) {
+    .fout { color: #ffb3b0; background: #3a1f1e; border-color: #6b2f2c; }
+  }
+  .acties .knoppen { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+  .exportbalk { display: flex; justify-content: flex-end; margin: 0 0 8px; }
+  .exportbalk button { font-size: .85rem; padding: 6px 12px; }
+  .plaats { display: block; margin-top: 2px; font-size: .75rem; color: var(--gedempt); }
+  .plaats.twijfel { color: var(--waarschuwing); font-weight: 600; }
+  .naamfilter { margin: 0 0 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .naamfilter label { margin: 0; }
+  .naamfilter select { width: auto; }
+  .crawlkaart .filters { align-items: end; margin-bottom: 12px; }
+  .crawlkaart .knop { font-size: .95rem; padding: 9px 14px; font-weight: 600;
+    background: var(--accent); color: var(--vlak); border-color: var(--accent); }
+  .crawlkaart .knop:hover { background: var(--accent); opacity: .9; }
+  .voortgang { margin-top: 12px; }
+  .balk { height: 12px; border-radius: 6px; background: var(--grond);
+          border: 1px solid var(--lijn); overflow: hidden; }
+  .vulling { height: 100%; width: 0; background: var(--tabrand);
+             transition: width .6s ease; }
+  .vulling.onbepaald { width: 35%; animation: schuif 1.4s ease-in-out infinite alternate; }
+  @keyframes schuif { from { margin-left: 0; } to { margin-left: 65%; } }
+  @media (prefers-reduced-motion: reduce) {
+    .vulling.onbepaald { animation: none; width: 100%; opacity: .5; }
+    .vulling { transition: none; }
+  }
+  .voortgangtekst { margin: 6px 0 0; font-size: .9rem; }
+  .stopknop { margin-top: 8px; font-size: .9rem; padding: 6px 12px; font-weight: 600;
+    color: var(--waarschuwing); border-color: var(--waarschuwing); background: transparent; }
+  .stopknop:hover { background: var(--vlak); border-color: var(--waarschuwing); }
+  .voortgangtekst a { color: var(--accent); }
+  .crawlstatus { margin: 0; color: var(--gedempt); font-size: .9rem; }
+  button[disabled] { opacity: .6; cursor: default; }
+  .acties { white-space: nowrap; }
+  code { font-size: .85em; background: var(--grond); padding: 1px 4px;
+         border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<header class="kop">
+  <div class="omhulsel">
+    <div class="titel">
+      <img class="logo" src="icoon-groot.png" alt="" width="88" height="88">
+      <h1>SpellingSpeurneus</h1>
+    </div>
+  </div>
+</header>
+
+<div class="omhulsel">
+
+  <div id="app">
+
+  <p class="fout" id="fout" role="alert" hidden></p>
+
+  <div class="tabbladen deeltabs" role="tablist" aria-label="Deel van de site" id="deeltabs"></div>
+
+  <div class="kaart crawlkaart" id="crawlkaart">
+    <h2 id="crawlkop">Nieuwe crawl</h2>
+    <div class="filters">
+      <button type="button" class="knop" id="crawlknop">Crawl starten</button>
+    </div>
+    <div class="voortgang" id="voortgang" hidden>
+      <div class="balk" role="progressbar" aria-label="Voortgang van de crawl"
+           aria-valuemin="0" aria-valuemax="100" id="balk">
+        <div class="vulling" id="vulling"></div>
+      </div>
+      <p class="voortgangtekst" id="voortgangtekst" aria-live="polite"></p>
+      <button type="button" class="stopknop" id="stopknop" hidden>Crawl stoppen</button>
+    </div>
+    <p class="crawlstatus" id="crawlstatus">Even kijken of er vandaag al een crawl is gestart…</p>
+  </div>
+
+  <div class="kaart feiten" id="feiten"><span class="melding">Bezig met laden…</span></div>
+
+  <div class="kaart filters">
+    <div class="filter">
+      <label for="urlfilter">Filter op URL</label>
+      <input type="search" id="urlfilter" placeholder="bijvoorbeeld: /liechtenstein" autocomplete="off">
+    </div>
+    <div class="filter">
+      <label for="woordfilter">Filter op woord</label>
+      <input type="search" id="woordfilter" placeholder="bijvoorbeeld: zakenrollers" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="tabbladen" role="tablist">
+    <button type="button" class="tabblad" role="tab" id="tab-spelfouten"
+            aria-controls="paneel-spelfouten" aria-selected="true">
+      Spelfouten <span class="aantal" id="aantal-spelfouten"></span>
+    </button>
+    <button type="button" class="tabblad" role="tab" id="tab-namen"
+            aria-controls="paneel-namen" aria-selected="false" tabindex="-1">
+      Namen <span class="aantal" id="aantal-namen"></span>
+    </button>
+    <button type="button" class="tabblad" role="tab" id="tab-goedgekeurd"
+            aria-controls="paneel-goedgekeurd" aria-selected="false" tabindex="-1">
+      Goedgekeurd <span class="aantal" id="aantal-goedgekeurd"></span>
+    </button>
+  </div>
+
+  <div id="paneel-spelfouten" role="tabpanel" aria-labelledby="tab-spelfouten">
+    <div class="exportbalk">
+      <button type="button" id="xlsx-spelfouten">Download als Excel</button>
+    </div>
+    <div class="kaart tabelhouder">
+      <table>
+        <thead><tr><th>Woord</th><th>Zin</th><th>Pagina</th><th></th></tr></thead>
+        <tbody id="rijen"><tr><td colspan="4" class="melding">Bezig met laden…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="paneel-namen" role="tabpanel" aria-labelledby="tab-namen" hidden>
+    <p class="uitleg">Woorden met een hoofdletter middenin een zin: plaatsen,
+      organisaties en anderstalige bronnen. Onder de naam staat een oordeel uit
+      <a href="https://www.geonames.org">GeoNames</a>: <em>bekende plaatsnaam</em>, of
+      <em>lijkt op</em> een bekende plaats. Geen oordeel betekent dat de naam er niet in staat.</p>
+    <p class="fout" id="naamoordeel-ontbreekt" hidden>Deze crawl heeft nog geen oordeel over
+      de plaatsnamen: hij is gedraaid voordat die check bestond, of de lijst van GeoNames
+      kon niet worden opgehaald. Start een nieuwe crawl om het oordeel erbij te krijgen.</p>
+    <div class="naamfilter">
+      <label for="naamsoort">Toon</label>
+      <select id="naamsoort">
+        <option value="alles">Alle namen</option>
+        <option value="twijfel">Mogelijk verkeerd gespeld</option>
+        <option value="bekend">Bekende plaatsnamen</option>
+        <option value="rest">Overige</option>
+      </select>
+    </div>
+    <div class="kaart tabelhouder">
+      <table>
+        <thead><tr><th>Naam</th><th>Zin</th><th>Pagina</th><th></th></tr></thead>
+        <tbody id="naamrijen"><tr><td colspan="4" class="melding">Bezig met laden…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="paneel-goedgekeurd" role="tabpanel" aria-labelledby="tab-goedgekeurd" hidden>
+    <div class="kaart tabelhouder">
+      <table>
+        <thead><tr><th>Woord</th><th>Soort</th><th></th></tr></thead>
+        <tbody id="goedgekeurdrijen"><tr><td colspan="3" class="melding">Bezig met laden…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  </div><!-- /#app -->
+
+  <footer>
+    Spelling getoetst aan de <a href="https://github.com/OpenTaal/opentaal-wordlist">OpenTaal-woordenlijst</a>
+    (Keurmerk Spelling van de Taalunie, licentie BSD/CC BY 3.0).
+    Plaatsnamen getoetst aan <a href="https://www.geonames.org">GeoNames</a> (licentie CC BY 4.0).
+    Code en uitleg staan in de <a href="https://github.com/NWW-team/SpellingSpeurneus">repository</a>.
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="xlsx.js?v=2"></script>
+<script>
+// Publieke projectconfiguratie. De publishable key is bedoeld om in een
+// frontend te staan. Let op: er is geen inlog meer, dus de database geeft de
+// bevindingen vrij aan iedereen met deze key - en die staat in een publieke
+// repository. De "geheime link" is dus geen toegangscontrole; zie besluit 3 in
+// OVERDRACHT.md. Wat hier NOOIT in mag: het databasewachtwoord, een secret key
+// of de service-role key.
+const SUPABASE_URL = "https://riwznqurcluudvyrkwxe.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_8D0tbPlRD5eWqjIJDdQgKg_BxKn2Knx";
+
+// Geen sessie nodig: niets bewaren en geen tokens verversen.
+// Tijden schrijven we als "16.51 uur", zoals de redactie dat wil, niet als "16:51".
+// Altijd in Nederlandse tijd, ook als de lezer ergens anders is.
+const NL_TIJD = { timeZone: "Europe/Amsterdam" };
+function tijd(datum) {
+  return new Date(datum).toLocaleTimeString("nl-NL",
+    { ...NL_TIJD, hour: "numeric", minute: "2-digit", hourCycle: "h23" })
+    // De browser zet voor het Nederlands zelf een nul voor het uur, dus die halen we er hier af.
+    .replace(":", ".").replace(/^0(?=\d)/, "") + " uur";
+}
+function datumTijd(datum) {
+  return new Date(datum).toLocaleDateString("nl-NL", { ...NL_TIJD, dateStyle: "long" })
+    + ", " + tijd(datum);
+}
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY,
+  { auth: { persistSession: false, autoRefreshToken: false } });
+
+const rijenLichaam = document.getElementById("rijen");
+const naamLichaam = document.getElementById("naamrijen");
+const feitenVak = document.getElementById("feiten");
+const urlFilter = document.getElementById("urlfilter");
+const woordFilter = document.getElementById("woordfilter");
+const naamSoort = document.getElementById("naamsoort");
+const tabbladen = [...document.querySelectorAll(".tabblad")];
+let bevindingen = [];
+let huidigeCrawl = null;              // de crawl waarvan de bevindingen op het scherm staan
+// Wat nu bij Spelfouten staat (na de filters), voor de Excel-download.
+let zichtbaarVoorExport = [];
+let goedgekeurd = [];                 // actieve goedkeuringen uit Supabase
+let goedgekeurdSleutels = new Set();  // dezelfde woorden, kleine letters
+let verplaatstSleutels = new Set();   // namen die de redactie als spelfout heeft aangewezen, kleine letters
+
+// Een bevinding zonder soort komt uit een crawl van voor de scheiding tussen
+// spelfouten en namen. Die tonen we bij de spelfouten, zoals hij toen ook stond.
+// Een naam die de redactie als verkeerd gespeld heeft aangewezen, telt als spelfout. De
+// bevinding zelf blijft een naam in de database; de volgende crawl bewaart hem als spelfout.
+const isVerplaatst = b => b.soort === "naam" && verplaatstSleutels.has(b.woord.toLowerCase());
+const isNaam = b => b.soort === "naam" && !isVerplaatst(b);
+
+// Resten van het sjabloon of het CMS: "undefined", "[object Object]",
+// "{{titel}}". De crawler meldt ze als gewone spelfout, want de kolom `soort`
+// laat maar twee waarden toe. Hier herkennen we ze aan het woord zelf, zodat
+// ze bovenaan komen en opvallen tussen de tikfouten.
+//
+// LET OP: dit patroon hoort gelijk te blijven aan SJABLOONRESTEN in
+// scripts/crawl.py. Wijzig je daar iets, wijzig het hier dan ook.
+const SJABLOONREST = /^(?:\[object [A-Za-z]+\]|\{\{[^{}]{0,60}\}\}|\$\{[^{}]{0,60}\}|&(?:nbsp|amp|quot|lt|gt|#\d+);|undefined|null|NaN|Infinity)$/;
+const isSjabloonrest = b => SJABLOONREST.test(b.woord);
+
+function ontsnap(tekst) {
+  const hulp = document.createElement("div");
+  hulp.textContent = tekst;
+  // textContent -> innerHTML ontsnapt &, < en >, maar geen aanhalingstekens.
+  // Die gebruiken we hier ook binnen dubbel-aangehaalde attributen (data-woord, href),
+  // dus die ontsnappen we zelf, anders breekt een woord met " uit het attribuut.
+  return hulp.innerHTML.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+function markeer(zin, woord) {
+  const veilig = ontsnap(zin);
+  // Het woord moet op dezelfde manier ontsnapt worden als de zin, anders zoekt
+  // de regexp naar iets dat er niet meer staat: "veiligheidsrisico's" wordt in
+  // de zin "veiligheidsrisico&#39;s", en dan mist hij zichzelf.
+  const gezocht = ontsnap(woord).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const patroon = new RegExp("(^|[^\\p{L}])(" + gezocht + ")(?![\\p{L}])", "u");
+  return veilig.replace(patroon, "$1<mark>$2</mark>");
+}
+
+function korteUrl(url) {
+  try { return new URL(url).pathname; } catch { return url; }
+}
+
+// De tellers bovenaan tellen wat nog openstaat: zonder wat de redactie heeft goedgekeurd, en met
+// een naam die als spelfout is aangewezen bij de spelfouten. Ze worden bij elke wijziging opnieuw
+// berekend (teken() roept dit aan), zodat ze altijd kloppen met wat in de tabbladen staat.
+function toonFeiten(gegevens) {
+  const datum = datumTijd(gegevens.gestart_op);
+  const openstaand = bevindingen.filter(b => !goedgekeurdSleutels.has(b.woord.toLowerCase()));
+  const spelfouten = openstaand.filter(b => !isNaam(b)).length;
+  // Namen tellen we per uniek woord, want zo staan ze ook in de tabel.
+  const namen = new Set(openstaand.filter(isNaam).map(b => b.woord)).size;
+  // Alleen tonen als er iets is. Een vakje dat altijd "0" zegt leest niemand
+  // nog; een vakje dat er ineens staat, valt op.
+  const resten = openstaand.filter(isSjabloonrest).length;
+  const restenVak = resten
+    ? `<div class="feit"><strong class="alarm">${resten}</strong>
+         <span>sjabloonresten</span></div>`
+    : "";
+  feitenVak.innerHTML = `
+    <div class="feit"><strong>${spelfouten}</strong><span>spelfouten</span></div>
+    ${restenVak}
+    <div class="feit"><strong>${namen}</strong><span>namen apart gezet</span></div>
+    <div class="feit"><strong>${gegevens.aantal_paginas}</strong><span>pagina's bekeken</span></div>
+    <div class="feit"><strong>${datum}</strong><span>laatste crawl</span></div>`;
+}
+
+// De cel met de link naar de pagina. Beide tabbladen gebruiken hem, zodat een
+// bevinding overal op dezelfde manier naar zijn bron wijst.
+function bronCel(b, extra = "") {
+  const link = b.url.startsWith("http")
+    ? `<a href="${ontsnap(b.url)}" target="_blank" rel="noopener">${ontsnap(korteUrl(b.url))}</a>`
+    : ontsnap(b.url);
+  return `<td class="bron">${link}
+    <small>${ontsnap(b.titel || "")}</small>${extra}</td>`;
+}
+
+// De soort goedkeuring: een woord uit het spelfoutentabblad, of een naam.
+// Goedkeuren staat overal. Bij een naam staat erbij "Is een spelfout"; bij een spelfout die van de
+// namen komt staat erbij "Terug naar Namen".
+function knopCel(woord, soort, extra = "") {
+  const w = ontsnap(woord);
+  const tweede = extra === "naam"
+    ? `<button type="button" data-actie="verplaatsen" data-woord="${w}"
+         title="Deze naam is verkeerd gespeld: hij gaat naar de spelfouten">Is een spelfout</button>`
+    : extra === "terug"
+      ? `<button type="button" data-actie="terugzetten" data-woord="${w}"
+           title="Dit is toch een naam: hij gaat terug naar de namen">Terug naar Namen</button>`
+      : "";
+  return `<td class="acties"><div class="knoppen"><button type="button" data-actie="goedkeuren"
+            data-woord="${w}" data-soort="${soort}"
+            title="Dit woord is goed: het verdwijnt hier en de volgende crawl slaat het over">
+            Goedkeuren</button>${tweede}</div></td>`;
+}
+
+function leeg(lichaam, tekst, kolommen = 4) {
+  lichaam.innerHTML = `<tr><td colspan="${kolommen}" class="melding">${tekst}</td></tr>`;
+}
+
+function teken() {
+  const urlTerm = urlFilter.value.trim().toLowerCase();
+  const woordTerm = woordFilter.value.trim().toLowerCase();
+  // Goedgekeurde woorden en namen blijven uit beeld, in beide tabbladen: de
+  // crawler laat een goedgekeurde naam ook aan het zinsbegin door.
+  const zichtbaar = bevindingen.filter(b =>
+    !goedgekeurdSleutels.has(b.woord.toLowerCase()) &&
+    b.url.toLowerCase().includes(urlTerm) && b.woord.toLowerCase().includes(woordTerm));
+
+  const spelfouten = zichtbaar.filter(b => !isNaam(b));
+  tekenSpelfouten(spelfouten);
+  tekenNamen(zichtbaar.filter(isNaam));
+
+  document.getElementById("aantal-spelfouten").textContent = spelfouten.length;
+  tekenGoedgekeurd();
+  if (huidigeCrawl) toonFeiten(huidigeCrawl);
+}
+
+function tekenGoedgekeurd() {
+  document.getElementById("aantal-goedgekeurd").textContent = goedgekeurd.length;
+  const lichaam = document.getElementById("goedgekeurdrijen");
+  if (!goedgekeurd.length) {
+    leeg(lichaam, "Nog niets goedgekeurd.", 3);
+    return;
+  }
+  // Alfabetisch, en gefilterd op het woordfilter, zodat een woord snel te vinden is.
+  const term = woordFilter.value.trim().toLowerCase();
+  const rijen = goedgekeurd
+    .filter(g => g.woord.toLowerCase().includes(term))
+    .sort((a, z) => a.woord.localeCompare(z.woord, "nl", { sensitivity: "base" }));
+  if (!rijen.length) {
+    leeg(lichaam, "Geen goedgekeurde woorden die aan het filter voldoen.", 3);
+    return;
+  }
+  lichaam.innerHTML = rijen.map(g => `
+    <tr>
+      <td class="woord">${ontsnap(g.woord)}</td>
+      <td>${g.soort === "naam" ? "naam" : "woord"}</td>
+      <td class="acties"><button type="button" data-actie="intrekken"
+          data-woord="${ontsnap(g.woord)}" data-soort="${g.soort}">Intrekken</button></td>
+    </tr>`).join("");
+}
+
+function tekenSpelfouten(rijen) {
+  if (!rijen.length) {
+    leeg(rijenLichaam, "Geen spelfouten die aan het filter voldoen.");
+    zichtbaarVoorExport = [];
+    zetExportKnop();
+    return;
+  }
+
+  // Sjabloonresten bovenaan: het zijn er zelden veel, en het is het soort
+  // melding dat niet in een lijst van honderden hoort te verdwijnen.
+  const geordend = [...rijen].sort(
+    (a, z) => (isSjabloonrest(z) ? 1 : 0) - (isSjabloonrest(a) ? 1 : 0));
+
+  zichtbaarVoorExport = geordend;
+  zetExportKnop();
+
+  rijenLichaam.innerHTML = geordend.map(b => {
+    const rest = isSjabloonrest(b);
+    const verplaatst = isVerplaatst(b);
+    const merk = rest ? `<span class="merk">sjabloonrest</span>` : "";
+    const herkomst = verplaatst
+      ? `<span class="plaats">verplaatst vanuit Namen</span>` +
+        (b.suggestie ? `<span class="plaats twijfel">lijkt op ${ontsnap(b.suggestie)}</span>` : "")
+      : "";
+    return `
+    <tr${rest ? ' class="sjabloon"' : ""}>
+      <td class="woord">${ontsnap(b.woord)}${merk}${herkomst}</td>
+      <td class="context">${markeer(b.context, b.woord)}</td>
+      ${bronCel(b)}
+      ${knopCel(b.woord, "woord", verplaatst ? "terug" : "")}
+    </tr>`;
+  }).join("");
+}
+
+// Namen staan één keer in de lijst, met het aantal pagina's erbij. Dezelfde naam
+// komt op reisadviespagina's tientallen keren terug; ontdubbeld is de lijst door
+// te scrollen, terwijl een verkeerd gespelde plaatsnaam op te zoeken blijft.
+function tekenNamen(rijen) {
+  const perNaam = new Map();
+  for (const b of rijen) {
+    if (!perNaam.has(b.woord)) perNaam.set(b.woord, { ...b, paginas: new Set() });
+    perNaam.get(b.woord).paginas.add(b.url);
+  }
+  const alle = [...perNaam.values()];
+  // Mogelijk verkeerd gespelde namen eerst: dat is wat de redacteur wil nalopen.
+  const rang = n => (n.plaats_status === "twijfel" ? 0 : 1);
+  alle.sort((a, z) => rang(a) - rang(z) ||
+    a.woord.localeCompare(z.woord, "nl", { sensitivity: "base" }));
+
+  // De keuzelijst toont hoeveel er in elke groep zitten. Namen zonder oordeel (een
+  // crawl zonder plaatsnamenlijst) vallen onder "Overige".
+  const groep = n => (n.plaats_status === "twijfel" ? "twijfel"
+    : n.plaats_status === "bekend" ? "bekend" : "rest");
+  const tellingen = { alles: alle.length, twijfel: 0, bekend: 0, rest: 0 };
+  for (const n of alle) tellingen[groep(n)]++;
+  for (const optie of naamSoort.options) {
+    const naam = optie.dataset.naam ||= optie.textContent;
+    optie.textContent = `${naam} (${tellingen[optie.value]})`;
+  }
+
+  // Een crawl van voor de plaatsnamencheck (of zonder GeoNames) heeft geen oordelen:
+  // zeg dat, in plaats van uitleg te geven over iets dat er niet staat.
+  const heeftOordeel = alle.some(n => n.plaats_status);
+  document.getElementById("naamoordeel-ontbreekt").hidden = heeftOordeel || !alle.length;
+  naamSoort.closest(".naamfilter").hidden = !heeftOordeel;
+
+  const gekozen = heeftOordeel ? naamSoort.value : "alles";
+  const namen = gekozen === "alles" ? alle : alle.filter(n => groep(n) === gekozen);
+
+  document.getElementById("aantal-namen").textContent = alle.length;
+  if (!namen.length) {
+    leeg(naamLichaam, "Geen namen die aan het filter voldoen.");
+    return;
+  }
+
+  naamLichaam.innerHTML = namen.map(b => {
+    // De link wijst naar de pagina van het getoonde voorbeeld. Staat de naam
+    // op meer pagina's, dan zegt de cel erbij op hoeveel.
+    const meer = b.paginas.size - 1;
+    const erbij = meer > 0
+      ? `<small class="telling">en ${meer} andere pagina${meer > 1 ? "'s" : ""}</small>`
+      : "";
+    const oordeel = b.plaats_status === "twijfel"
+      ? `<span class="plaats twijfel">lijkt op ${ontsnap(b.suggestie)}</span>`
+      : b.plaats_status === "bekend"
+        ? `<span class="plaats">bekende plaatsnaam</span>` : "";
+    return `
+    <tr>
+      <td class="woord">${ontsnap(b.woord)}${oordeel}</td>
+      <td class="context">${markeer(b.context, b.woord)}</td>
+      ${bronCel(b, erbij)}
+      ${knopCel(b.woord, "naam", "naam")}
+    </tr>`;
+  }).join("");
+}
+
+function kiesTabblad(gekozen) {
+  for (const tab of tabbladen) {
+    const actief = tab === gekozen;
+    tab.setAttribute("aria-selected", String(actief));
+    tab.tabIndex = actief ? 0 : -1;
+    document.getElementById(tab.getAttribute("aria-controls")).hidden = !actief;
+  }
+  // Bij Goedgekeurd staan alleen woorden, dus daar is filteren op URL zinloos.
+  urlFilter.closest(".filter").hidden = gekozen.id === "tab-goedgekeurd";
+  gekozen.focus();
+}
+
+for (const [nummer, tab] of tabbladen.entries()) {
+  tab.addEventListener("click", () => kiesTabblad(tab));
+  tab.addEventListener("keydown", gebeurtenis => {
+    const stap = { ArrowLeft: -1, ArrowRight: 1 }[gebeurtenis.key];
+    if (!stap) return;
+    gebeurtenis.preventDefault();
+    kiesTabblad(tabbladen[(nummer + stap + tabbladen.length) % tabbladen.length]);
+  });
+}
+
+const foutVak = document.getElementById("fout");
+
+// Goedkeuren en intrekken gaan via een Edge Function; de browser zelf mag niets
+// schrijven. De functie begrenst het aantal wijzigingen per uur.
+async function wijzig(actie, woord, soort) {
+  const antwoord = await fetch(`${SUPABASE_URL}/functions/v1/goedkeuren`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", apikey: SUPABASE_PUBLISHABLE_KEY },
+    body: JSON.stringify({ actie, woord, soort }),
+  });
+  if (!antwoord.ok) {
+    let melding = `Er ging iets mis (${antwoord.status}).`;
+    try { melding = (await antwoord.json()).fout || melding; } catch { /* geen JSON */ }
+    throw new Error(melding);
+  }
+}
+
+// Een naam naar de spelfouten verplaatsen of terugzetten, via een eigen Edge Function.
+async function wijzigVerplaatsing(actie, woord) {
+  const antwoord = await fetch(`${SUPABASE_URL}/functions/v1/naam-verplaatsen`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", apikey: SUPABASE_PUBLISHABLE_KEY },
+    body: JSON.stringify({ actie, woord }),
+  });
+  if (!antwoord.ok) {
+    let melding = `Er ging iets mis (${antwoord.status}).`;
+    try { melding = (await antwoord.json()).fout || melding; } catch { /* geen JSON */ }
+    throw new Error(melding);
+  }
+}
+
+document.addEventListener("click", async event => {
+  const knop = event.target.closest("button[data-actie]");
+  if (!knop) return;
+  const { actie, woord, soort } = knop.dataset;
+  foutVak.hidden = true;
+  knop.disabled = true;
+  const verplaatsing = actie === "verplaatsen" || actie === "terugzetten";
+  const werkwoord = { goedkeuren: "Goedkeuren", intrekken: "Intrekken",
+                      verplaatsen: "Verplaatsen", terugzetten: "Terugzetten" }[actie];
+  try {
+    if (verplaatsing) {
+      await wijzigVerplaatsing(actie, woord);
+      await laadVerplaatst();
+    } else {
+      await wijzig(actie, woord, soort);
+      await laadGoedgekeurd();
+    }
+    teken();
+  } catch (fout) {
+    knop.disabled = false;
+    foutVak.textContent = `${werkwoord} van "${woord}" is niet gelukt: ${fout.message}`;
+    foutVak.hidden = false;
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Excel-download
+// ---------------------------------------------------------------------------
+// De download bevat wat nu in het tabblad Spelfouten staat: met de filters die je hebt gezet, en zonder wat
+// is goedgekeurd. Zonder filters is dat de hele lijst. Dat staat ook in de bestandsnaam.
+const exportKnop = document.getElementById("xlsx-spelfouten");
+
+function zetExportKnop() {
+  const aantal = zichtbaarVoorExport.length;
+  exportKnop.textContent = `Download als Excel (${aantal} ${aantal === 1 ? "rij" : "rijen"})`;
+  exportKnop.disabled = aantal === 0;
+}
+
+function exportBestandsnaam() {
+  const datum = huidigeCrawl ? nlDatum(huidigeCrawl.gestart_op) : nlDatum(new Date());
+  const deel = huidigeCrawl ? huidigeCrawl.bron : "crawl";
+  const gefilterd = urlFilter.value.trim() || woordFilter.value.trim();
+  return `spelfouten-${deel}-${datum}${gefilterd ? "-gefilterd" : ""}.xlsx`;
+}
+
+// De zin in drie stukken, met het woord in het midden: zo kan de Excel het woord vet maken.
+// Hij zoekt het woord op dezelfde manier als markeer() voor de gele markering in het scherm.
+function zinMetVetWoord(zin, woord) {
+  // De crawler schrijft ’ als ', dus in de zin kan het woord met een andere apostrof staan.
+  const gezocht = woord.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/'/g, "['\u2019]");
+  const treffer = new RegExp("(^|[^\\p{L}])(" + gezocht + ")(?![\\p{L}])", "u").exec(zin);
+  if (!treffer) return zin;
+  const begin = treffer.index + treffer[1].length;
+  return [zin.slice(0, begin), { tekst: treffer[2], vet: true }, zin.slice(begin + treffer[2].length)];
+}
+
+exportKnop.addEventListener("click", () => {
+  downloadXlsx(exportBestandsnaam(), {
+    werkblad: "Spelfouten",
+    // Suggestie en Opmerking blijven leeg: die vult de redacteur zelf in.
+    kolommen: [
+      { titel: "Pagina", breedte: 60 }, { titel: "Zin", breedte: 90 },
+      { titel: "Woord", breedte: 26 }, { titel: "Suggestie", breedte: 26 },
+      { titel: "Opmerking", breedte: 40 },
+    ],
+    rijen: zichtbaarVoorExport.map(b => [b.url, zinMetVetWoord(b.context, b.woord), b.woord, "", ""]),
+  });
+});
+
+urlFilter.addEventListener("input", teken);
+woordFilter.addEventListener("input", teken);
+naamSoort.addEventListener("change", teken);
+
+// Een nieuwere ronde mag een oudere overrulen, bijvoorbeeld bij opnieuw laden.
+let ronde = 0;
+
+function wisGegevens() {
+  bevindingen = [];
+  feitenVak.innerHTML = '<span class="melding">Bezig met laden…</span>';
+  leeg(rijenLichaam, "Bezig met laden…");
+  leeg(naamLichaam, "Bezig met laden…");
+}
+
+// ---------------------------------------------------------------------------
+// De gegevens ophalen
+// ---------------------------------------------------------------------------
+
+async function laadVerplaatst() {
+  const blok = 1000;
+  const alles = [];
+  for (let van = 0; ; van += blok) {
+    const { data, error } = await sb
+      .from("naam_is_spelfout")
+      .select("woord, verplaatst_op")
+      .is("teruggezet_op", null)
+      .order("id")
+      .range(van, van + blok - 1);
+    if (error) throw error;
+    alles.push(...data);
+    if (data.length < blok) break;
+  }
+  verplaatstSleutels = new Set(alles.map(n => n.woord.toLowerCase()));
+}
+
+async function laadGoedgekeurd() {
+  // In blokken: de API geeft er standaard maximaal duizend per verzoek.
+  const blok = 1000;
+  const alles = [];
+  for (let van = 0; ; van += blok) {
+    const { data, error } = await sb
+      .from("goedgekeurd")
+      .select("woord, soort, goedgekeurd_op")
+      .is("ingetrokken_op", null)
+      .order("id")
+      .range(van, van + blok - 1);
+    if (error) throw error;
+    alles.push(...data);
+    if (data.length < blok) break;
+  }
+  goedgekeurd = alles;
+  goedgekeurdSleutels = new Set(alles.map(g => g.woord.toLowerCase()));
+}
+
+// ---------------------------------------------------------------------------
+// Een crawl starten
+// ---------------------------------------------------------------------------
+// Er mag er één per dag. De database dwingt dat af; hier tonen we alleen of de
+// dag al is gebruikt, zodat de knop niet naar een weigering leidt.
+const crawlKnop = document.getElementById("crawlknop");
+// De naam van een deel, zoals op de tab.
+function deelNaam(bron) {
+  return DEEL_INFO[bron] ? DEEL_INFO[bron].naam : bron;
+}
+const crawlStatus = document.getElementById("crawlstatus");
+const nlDatum = d => new Date(d).toLocaleDateString("sv-SE", NL_TIJD);  // jjjj-mm-dd
+
+// Een crawl die nog loopt toont een balk. Het scherm vraagt elke paar seconden
+// de stand op; de crawler zelf meldt hem aan Supabase (scripts/voortgang.py).
+const VOORTGANG_INTERVAL = 4000;
+const ACTIEF = ["aangevraagd", "crawlen", "publiceren"];
+const VASTGELOPEN_NA = 15 * 60 * 1000;   // zo lang geen levensteken is verdacht
+const MAX_DUUR = 8 * 3600 * 1000;        // oudere aanvragen tonen we niet meer
+let pollTimer = null;
+let wasActief = false;
+
+const voortgangVak = document.getElementById("voortgang");
+const balk = document.getElementById("balk");
+const vulling = document.getElementById("vulling");
+const voortgangTekst = document.getElementById("voortgangtekst");
+const stopKnop = document.getElementById("stopknop");
+
+function minuten(seconden) {
+  if (seconden < 90) return "minder dan 2 minuten";
+  return `ongeveer ${Math.round(seconden / 60)} minuten`;
+}
+
+function runLink(a) {
+  return a.run_url
+    ? ` <a href="${ontsnap(a.run_url)}" target="_blank" rel="noopener">Bekijk de run in GitHub</a>.`
+    : "";
+}
+
+function tekenVoortgang(a) {
+  const actief = a && ACTIEF.includes(a.status) &&
+    Date.now() - new Date(a.aangevraagd_op) < MAX_DUUR;
+
+  const afgebroken = a && ["mislukt", "gestopt"].includes(a.status);
+  if (!actief && !(afgebroken && nlDatum(a.aangevraagd_op) === nlDatum(new Date()))) {
+    voortgangVak.hidden = true;
+    stopKnop.hidden = true;
+    return;
+  }
+  voortgangVak.hidden = false;
+  // Stoppen kan zolang er gecrawld of voorbereid wordt, ook als de crawl vast lijkt te zitten.
+  // Tijdens het opslaan niet meer: dan zou er een half resultaat achterblijven.
+  stopKnop.hidden = !["aangevraagd", "crawlen"].includes(a.status);
+  stopKnop.disabled = false;
+  vulling.classList.remove("onbepaald");
+  balk.removeAttribute("aria-valuenow");
+
+  if (afgebroken) {
+    vulling.style.width = "0";
+    voortgangTekst.innerHTML = a.status === "gestopt"
+      ? "De crawl is gestopt. Er is niets gepubliceerd en je mag opnieuw starten."
+      : `De crawl is mislukt. Er is niets gepubliceerd en je mag opnieuw starten.${runLink(a)}`;
+    return;
+  }
+
+  const laatsteLevensteken = new Date(a.bijgewerkt_op || a.aangevraagd_op);
+  const vast = Date.now() - laatsteLevensteken > VASTGELOPEN_NA;
+  const waarschuwing = vast
+    ? ` Er is sinds ${tijd(laatsteLevensteken)} niets meer gemeld; kijk in GitHub of de crawl nog loopt.${runLink(a)}`
+    : "";
+
+  if (a.status === "crawlen" && a.paginas_totaal) {
+    const klaar = a.paginas_klaar || 0;
+    const percentage = Math.min(100, Math.round(100 * klaar / a.paginas_totaal));
+    vulling.style.width = percentage + "%";
+    balk.setAttribute("aria-valuenow", String(percentage));
+    // De resttijd uit het tempo tot nu toe, pas als er een paar pagina's zijn.
+    let rest = "de resttijd wordt berekend…";
+    const verstreken = (Date.now() - new Date(a.crawl_gestart_op)) / 1000;
+    if (klaar >= 3 && verstreken > 0) {
+      rest = `nog ${minuten(((a.paginas_totaal - klaar) * verstreken) / klaar)}, plus het opslaan`;
+    }
+    voortgangTekst.innerHTML = `${ontsnap(deelNaam(a.bron))}: pagina ${klaar} van ${a.paginas_totaal} (${percentage}%) — ${rest}.${waarschuwing}`;
+  } else {
+    vulling.classList.add("onbepaald");
+    vulling.style.width = "";
+    voortgangTekst.innerHTML = a.status === "publiceren"
+      ? `${ontsnap(deelNaam(a.bron))}: het resultaat wordt opgeslagen… Stoppen kan nu niet meer.${waarschuwing}`
+      : `${ontsnap(deelNaam(a.bron))}: de crawl wordt voorbereid (woordenlijst ophalen)…${waarschuwing}`;
+  }
+}
+
+async function laadAanvragen() {
+  const { data, error } = await sb
+    .from("crawl_aanvragen")
+    .select("aangevraagd_op, bron, status, paginas_klaar, paginas_totaal, crawl_gestart_op, bijgewerkt_op, run_url")
+    .order("aangevraagd_op", { ascending: false })
+    .limit(1);
+  if (error) {
+    crawlStatus.textContent = "Kan niet nagaan of er vandaag al een crawl is gestart.";
+    crawlKnop.disabled = true;
+    return;
+  }
+  const laatste = data[0];
+  // Een mislukte of gestopte crawl telt niet mee: de dag komt dan vrij.
+  const vandaagGebruikt = laatste && !["mislukt", "gestopt"].includes(laatste.status) &&
+    nlDatum(laatste.aangevraagd_op) === nlDatum(new Date());
+  if (vandaagGebruikt) {
+    const wanneer = tijd(laatste.aangevraagd_op);
+    crawlStatus.textContent =
+      `Vandaag is er al een crawl gestart (${wanneer}, ${deelNaam(laatste.bron)}). Morgen kan er weer één.`;
+    crawlKnop.disabled = true;
+  } else {
+    crawlStatus.textContent = laatste
+      ? "Maximaal 1 crawl per dag. De laatste was op " + new Date(laatste.aangevraagd_op)
+          .toLocaleDateString("nl-NL", { ...NL_TIJD, dateStyle: "long" }) + "."
+      : "Maximaal 1 crawl per dag.";
+    crawlKnop.disabled = false;
+  }
+
+  tekenVoortgang(laatste);
+
+  // Zolang er een crawl loopt blijven we de stand opvragen. Zodra hij klaar is
+  // laden we de nieuwe resultaten, zonder dat de pagina ververst hoeft te worden.
+  const actief = !!laatste && ACTIEF.includes(laatste.status) &&
+    Date.now() - new Date(laatste.aangevraagd_op) < MAX_DUUR;
+  if (actief && !pollTimer) {
+    pollTimer = setInterval(() => laadAanvragen().catch(() => {}), VOORTGANG_INTERVAL);
+  } else if (!actief && pollTimer) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+  if (wasActief && !actief && laatste && laatste.status === "klaar") {
+    voortgangVak.hidden = false;
+    vulling.classList.remove("onbepaald");
+    vulling.style.width = "100%";
+    balk.setAttribute("aria-valuenow", "100");
+    voortgangTekst.textContent = "De crawl is klaar. De nieuwe resultaten staan hieronder.";
+    laadResultaten(DELEN.includes(laatste.bron) ? laatste.bron : huidigeDeel);
+  }
+  wasActief = actief;
+}
+
+stopKnop.addEventListener("click", async () => {
+  // Wat tot nu toe is gevonden gaat verloren: de crawl publiceert pas aan het eind.
+  if (!confirm("De crawl stoppen?\nWat tot nu toe is gevonden gaat verloren; er wordt niets gepubliceerd.")) return;
+  stopKnop.disabled = true;
+  try {
+    const antwoord = await fetch(`${SUPABASE_URL}/functions/v1/crawl-stoppen`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: SUPABASE_PUBLISHABLE_KEY },
+      body: "{}",
+    });
+    if (!antwoord.ok) {
+      let melding = `Er ging iets mis (${antwoord.status}).`;
+      try { melding = (await antwoord.json()).fout || melding; } catch { /* geen JSON */ }
+      throw new Error(melding);
+    }
+    await laadAanvragen();
+  } catch (fout) {
+    await laadAanvragen().catch(() => {});
+    stopKnop.disabled = false;
+    crawlStatus.textContent = "Stoppen is niet gelukt: " + fout.message;
+  }
+});
+
+crawlKnop.addEventListener("click", async () => {
+  const bron = huidigeDeel;
+  // Een crawl pakt het hele gekozen deel, kost de site verkeer en er mag er maar één per
+  // dag: vraag het na, met de naam en het aantal pagina's zoals in de keuzelijst.
+  const gekozen = `${DEEL_INFO[bron].naam} (${DEEL_INFO[bron].paginas} pagina's)`;
+  if (!confirm(`Crawl starten voor: ${gekozen}?\nEr mag er maar 1 per dag.`)) return;
+
+  crawlKnop.disabled = true;
+  crawlStatus.textContent = "Bezig met starten…";
+  try {
+    const antwoord = await fetch(`${SUPABASE_URL}/functions/v1/crawl-starten`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: SUPABASE_PUBLISHABLE_KEY },
+      body: JSON.stringify({ bron }),
+    });
+    if (!antwoord.ok) {
+      let melding = `Er ging iets mis (${antwoord.status}).`;
+      try { melding = (await antwoord.json()).fout || melding; } catch { /* geen JSON */ }
+      throw new Error(melding);
+    }
+    // De rij heeft nu status "aangevraagd": laadAanvragen toont de balk en begint met pollen.
+    await laadAanvragen();
+  } catch (fout) {
+    // Eerst de toestand opnieuw ophalen (misschien is de dag net gebruikt),
+    // dan de melding erbij, zodat die niet wordt overschreven.
+    await laadAanvragen();
+    crawlStatus.textContent = "Starten is niet gelukt: " + fout.message;
+  }
+});
+
+// De delen van de site, in de volgorde van de keuzelijst bij "Nieuwe crawl".
+const DEEL_INFO = {
+  "reisadvies": { naam: "Reisadviezen", paginas: "±236" },
+  "visum-nederland": { naam: "Visum voor Nederland", paginas: "±1.015" },
+  "caribisch-visum": { naam: "Visum voor Caribische Koninkrijksdelen", paginas: "±452" },
+  "ambassades": { naam: "Ambassades en consulaten", paginas: "±219" },
+};
+const DELEN = Object.keys(DEEL_INFO);
+const deeltabsVak = document.getElementById("deeltabs");
+let huidigeDeel = DELEN[0];           // altijd Reisadvies bij het openen
+let laatstePerDeel = {};              // per deel de laatste crawl, of undefined als er geen is
+
+function tekenDeeltabs() {
+  const info = DEEL_INFO[huidigeDeel];
+  document.getElementById("crawlkop").textContent = `Nieuwe crawl: ${info.naam}`;
+  document.getElementById("crawlknop").textContent = `Crawl starten (${info.paginas} pagina's)`;
+  deeltabsVak.innerHTML = DELEN.map(bron => `
+    <button type="button" class="deeltab" role="tab" data-deel="${bron}"
+            aria-selected="${bron === huidigeDeel}" tabindex="${bron === huidigeDeel ? 0 : -1}">
+      ${ontsnap(deelNaam(bron))}
+    </button>`).join("");
+}
+
+deeltabsVak.addEventListener("click", event => {
+  const tab = event.target.closest(".deeltab");
+  if (tab) kiesDeel(tab.dataset.deel);
+});
+deeltabsVak.addEventListener("keydown", event => {
+  const stap = { ArrowLeft: -1, ArrowRight: 1 }[event.key];
+  const tab = event.target.closest(".deeltab");
+  if (!stap || !tab) return;
+  event.preventDefault();
+  const nummer = DELEN.indexOf(tab.dataset.deel);
+  kiesDeel(DELEN[(nummer + stap + DELEN.length) % DELEN.length], true);
+});
+
+// Toont de laatste crawl van één deel. Heeft dat deel nog geen crawl, dan zegt het scherm dat.
+async function kiesDeel(bron, focus = false) {
+  const mijn = ++ronde;
+  huidigeDeel = bron;
+  tekenDeeltabs();
+  if (focus) deeltabsVak.querySelector(`[data-deel="${bron}"]`).focus();
+  try {
+    const crawl = laatstePerDeel[bron];
+    if (!crawl) {
+      huidigeCrawl = null;
+      bevindingen = [];
+      teken();  // zet tellers, exportknoppen en het tabblad Namen terug naar leeg
+      feitenVak.innerHTML = `<span class="melding">${ontsnap(deelNaam(bron))} is nog niet gecrawld.
+        Start hierboven een crawl om te beginnen.</span>`;
+      leeg(rijenLichaam, "Nog niets te zien.");
+      leeg(naamLichaam, "Nog niets te zien.");
+      return;
+    }
+    wisGegevens();
+    const rijen = await haalBevindingen(crawl.id);
+    if (mijn !== ronde) return;
+    huidigeCrawl = crawl;
+    bevindingen = rijen;
+    teken();
+  } catch (fout) {
+    if (mijn !== ronde) return;
+    feitenVak.innerHTML =
+      `<span class="melding">Kan de resultaten niet ophalen: ${ontsnap(fout.message || String(fout))}</span>`;
+    leeg(rijenLichaam, "Geen gegevens opgehaald.");
+    leeg(naamLichaam, "Geen gegevens opgehaald.");
+  }
+}
+
+// `deel`: welk deel erna getoond wordt. Zonder valt het terug op het deel dat nu open staat.
+async function laadResultaten(deel = huidigeDeel) {
+  const mijn = ++ronde;
+  try {
+    await laadGoedgekeurd();
+    await laadVerplaatst();
+    if (mijn !== ronde) return;
+    // Per deel de laatste crawl.
+    const antwoorden = await Promise.all(DELEN.map(bron => sb
+      .from("crawls")
+      .select("id, gestart_op, bron, aantal_paginas")
+      .eq("bron", bron)
+      .order("gestart_op", { ascending: false })
+      .limit(1)));
+    if (mijn !== ronde) return;
+    const mislukt = antwoorden.find(a => a.error);
+    if (mislukt) throw mislukt.error;
+    laatstePerDeel = Object.fromEntries(DELEN.map((bron, i) => [bron, antwoorden[i].data[0]]));
+    tekenGoedgekeurd();
+    await kiesDeel(deel);
+  } catch (fout) {
+    if (mijn !== ronde) return;
+    feitenVak.innerHTML =
+      `<span class="melding">Kan de resultaten niet ophalen: ${ontsnap(fout.message || String(fout))}</span>`;
+    leeg(rijenLichaam, "Geen gegevens opgehaald.");
+    leeg(naamLichaam, "Geen gegevens opgehaald.");
+  }
+}
+
+// In blokken ophalen: de API geeft er standaard maximaal duizend per verzoek,
+// en een crawl over een groter deel van de site levert er meer op.
+async function haalBevindingen(crawlId) {
+  const blok = 1000;
+  const alles = [];
+  for (let van = 0; ; van += blok) {
+    const { data, error } = await sb
+      .from("bevindingen")
+      .select("url, titel, woord, soort, context, plaats_status, suggestie")
+      .eq("crawl_id", crawlId)
+      .order("id")
+      .range(van, van + blok - 1);
+    if (error) throw error;
+    alles.push(...data);
+    if (data.length < blok) return alles;
+  }
+}
+
+tekenDeeltabs();
+laadAanvragen();
+laadResultaten();
+</script>
+</body>
+</html>

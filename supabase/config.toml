@@ -1,0 +1,13 @@
+# De publishable key is geen JWT, dus de ingebouwde JWT-controle moet uit. De
+# beveiliging van deze functie is de invoercontrole en de limiet in de code zelf.
+[functions.goedkeuren]
+verify_jwt = false
+
+[functions.crawl-starten]
+verify_jwt = false
+
+[functions.crawl-stoppen]
+verify_jwt = false
+
+[functions.naam-verplaatsen]
+verify_jwt = false

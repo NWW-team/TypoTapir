@@ -1,0 +1,20 @@
+# De echte woordenlijst wordt per run opgehaald bij OpenTaal (enkele MB's).
+# Die hoort niet in de repository.
+data/woordenlijst.txt
+
+# Python-restanten
+__pycache__/
+*.pyc
+
+# Het crawlresultaat gaat naar Supabase, niet in deze publieke repository.
+resultaten.json
+
+# Per crawl uit Supabase gehaald: wat in het scherm is goedgekeurd.
+goedgekeurd.json
+naam_is_spelfout.json
+
+# De GeoNames-plaatsnamen worden per run opgehaald (CC BY 4.0), niet bewaard.
+data/geonames/
+
+# Persoonlijke Claude Code-instellingen (toestemmingen), niet delen.
+.claude/settings.local.json
