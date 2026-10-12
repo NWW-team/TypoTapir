@@ -5,6 +5,10 @@
 > TypoTapir: Supabase-project `zasfgsgmbapnhfsnqsrp`, repository `NWW-team/TypoTapir`, één deel
 > (`visa-the-netherlands`), woordenlijst uit `wbritish`. Het pad van het deel is nog niet gecontroleerd
 > tegen de echte site.
+>
+> **Nog te doen in de SQL Editor van Supabase** (via de MCP loopt `drop index` vast): de index
+> `crawl_aanvragen_per_dag` vervangen door de versie uit `20261005000000_crawl_stoppen.sql`, zodat een
+> mislukte of gestopte crawl de dag niet verbrandt. Tot die tijd telt elke aanvraag mee.
 
 Wat een volgende sessie of collega moet weten om hier verder te kunnen. Voor hoe de app werkt voor
 wie hem gebruikt: zie [README.md](README.md). Voor het waarom: [STRATEGY.md](STRATEGY.md).
