@@ -222,8 +222,8 @@ altijd een harde bovengrens op het aantal pagina's.
 | `docs/index.html` | Het scherm. Eén bestand, geen buildstap |
 | `scripts/publiceer.py` | Zet het resultaat in Supabase, achter de toegangscontrole |
 | `supabase/` | Migraties (in de SQL Editor te plakken) en de Edge Function `goedkeuren` |
-| `docs/icoon-groot.png` | Dezelfde hond in 256 × 256 pixels, voor de kopbalk (88 pixels hoog, dus scherp op schermen met hoge resolutie) |
-| `docs/icoon.png` | Het icoon naast de titel en in het browsertabblad (favicon): de hond met de neus omhoog, 128 × 128 pixels, met transparante hoeken |
+| `docs/icoon-groot.png` | Dezelfde tapir in 256 × 256 pixels, voor de kopbalk (88 pixels hoog, dus scherp op schermen met hoge resolutie) |
+| `docs/icoon.png` | Het icoon naast de titel en in het browsertabblad (favicon): de tapir van TypoTapir, 128 × 128 pixels, met transparante hoeken |
 | `docs/xlsx.js` | Maakt de Excel-downloads in de browser, zonder bibliotheek |
 | `supabase/functions/naam-verplaatsen/` | Edge Function die een naam naar de spelfouten verplaatst of terugzet (de controle op het verzoek staat los, in `verplaatsen.ts`) |
 | `scripts/plaatsnamen.py` | Beoordeelt namen tegen GeoNames: bekend, lijkt op een bekende plaats, of geen oordeel |
