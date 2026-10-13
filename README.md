@@ -53,6 +53,7 @@ Je kiest een deel van de site; alles onder dat pad hoort erbij.
 | Deel | Pad | Pagina's (±) |
 |---|---|---|
 | Visa for the Netherlands | `/visa-the-netherlands` | 1.015 |
+| Caribbean visa | `/caribbean-visa` | 452 |
 
 De pagina's staan verspreid over de sitemaps van de site, dus de crawler leest ze allemaal en houdt over wat
 onder het pad valt. **Vertalingen worden overgeslagen**: de site zet Franse, Spaanse en Duitse versies naast de
@@ -158,7 +159,7 @@ Geen installatie nodig; alleen Python 3.
 python3 scripts/crawl.py --bron demo --max-paginas 5     # fictieve pagina's, zonder netwerk
 python3 scripts/crawl.py --bron visa-the-netherlands --max-paginas 10
 python3 -m http.server --directory docs 8000             # scherm bekijken op localhost:8000
-python3 scripts/test.py                                  # 137 controles; --offline slaat het netwerk over
+python3 scripts/test.py                                  # 139 controles; --offline slaat het netwerk over
 ```
 
 Het scherm heeft Supabase nodig om iets te tonen; lokaal zie je zonder internet niets. Het resultaat van een lokale crawl in Supabase zetten kan met:

@@ -35,6 +35,7 @@ USER_AGENT = f"TypoTapir/0.1 (+{PROJECT_URL})"
 # bij de eerste crawl: het scherm en het logboek zeggen hoeveel URL's eronder vallen.
 DELEN = {
     "visa-the-netherlands": "/visa-the-netherlands",
+    "caribbean-visa": "/caribbean-visa",
 }
 SITEMAP_INDEX = f"{SITE}/sitemap.xml"
 
