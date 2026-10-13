@@ -1,43 +1,63 @@
 # Overdracht
 
-> **TypoTapir** is een kopie van SpellingSpeurneus voor de Engelstalige site. Wat hieronder staat over
-> het Supabase-project, de Pages-link en de delen van de site is van het Nederlandse origineel. Voor
-> TypoTapir: Supabase-project `zasfgsgmbapnhfsnqsrp`, repository `NWW-team/TypoTapir`, één deel
-> (`visa-the-netherlands`), woordenlijst uit `wbritish`. Het pad van het deel is nog niet gecontroleerd
-> tegen de echte site.
->
-> **Nog te doen in de SQL Editor van Supabase** (via de MCP loopt `drop index` vast): de index
-> `crawl_aanvragen_per_dag` vervangen door de versie uit `20261005000000_crawl_stoppen.sql`, zodat een
-> mislukte of gestopte crawl de dag niet verbrandt. Tot die tijd telt elke aanvraag mee.
+Wat een volgende sessie of collega moet weten om hier verder te kunnen. Voor hoe de app werkt voor wie hem
+gebruikt: zie [README.md](README.md). Voor het waarom: [STRATEGY.md](STRATEGY.md).
 
-Wat een volgende sessie of collega moet weten om hier verder te kunnen. Voor hoe de app werkt voor
-wie hem gebruikt: zie [README.md](README.md). Voor het waarom: [STRATEGY.md](STRATEGY.md).
+Laatst bijgewerkt: **13 oktober 2026**.
 
-Laatst bijgewerkt: **5 oktober 2026**.
-
-Dit document is op die datum helemaal herschreven. Wie een oude versie kent (met "15 september" bovenaan):
-veel is sindsdien veranderd, vooral de inlog (weg), de lijst met goedgekeurde woorden (nu alleen in
-Supabase), en wat je in het scherm kunt doen.
+TypoTapir is op 12 oktober gemaakt als **kopie van SpellingSpeurneus**, de Nederlandse app voor
+nederlandwereldwijd.nl ([NWW-team/SpellingSpeurneus](https://github.com/NWW-team/SpellingSpeurneus)). De
+opbouw en de werkwijze zijn gelijk; dit document beschrijft wat hier anders is en wat de stand is. Besluiten,
+de uitleg van de toets en de risico's die voor beide apps gelden staan in de `OVERDRACHT.md` van het
+Nederlandse origineel (besluit 1 tot en met 6, "Hoe de toets werkt", "Risico's en bekende beperkingen").
+Wil je in een nieuwe chat met Claude doorwerken? Begin dan bij
+[Verder werken in een nieuwe chat](#verder-werken-in-een-nieuwe-chat).
 
 ## In het kort
 
-SpellingSpeurneus zoekt spelfouten op [nederlandwereldwijd.nl](https://www.nederlandwereldwijd.nl),
-wanneer de webredacteur daarom vraagt. Het scherm staat op
-**https://nww-team.github.io/SpellingSpeurneus/**, zonder inlog. De redacteur kiest de tab van een deel van de site,
-drukt op **Crawl starten**, volgt de voortgang, en loopt daarna de spelfouten en de namen na. Wat goed is
-keurt hij goed; een naam die fout is, verplaatst hij naar de spelfouten; en de spelfouten kan hij als Excel
-downloaden. Er draait niets vanzelf.
+TypoTapir zoekt spelfouten op [netherlandsworldwide.nl](https://www.netherlandsworldwide.nl), de Engelstalige
+site van Nederland Wereldwijd, in **Brits Engels met -ise**, wanneer de webredacteur daarom vraagt. Het scherm
+staat op **https://nww-team.github.io/TypoTapir/**, zonder inlog. De redacteur drukt in de tab van het deel
+op **Crawl starten**, volgt de voortgang, loopt de spelfouten en namen na en keurt goed wat goed is. Er draait
+niets vanzelf.
 
-De laatste crawl (5 oktober, 236 reisadviezen, 4 minuten) gaf 1.380 unieke namen en 125 unieke
-spelfouten, waarvan een groot deel vals alarm (woorden die goed zijn maar niet in OpenTaal staan) dat de
-redactie met Goedkeuren wegwerkt; op dat moment stonden er nog 24 open. **Van de 24 echte
-fouten die op 15 september waren gevonden, zijn er 13 op de site gecorrigeerd** (onder andere `nieet`,
-`Registeer`, `undefined`, `doen.n`, `III.Let`); 11 staan er nog: `autorisation`, `Bijvoorbeeldc`,
-`invullen.n`, `meenenemen`, `metrologisch`, `motorvoortuigen`, `plaatvinden`, `prvincie`, `vande`,
-`veiilgheidsrisico's`, `ZDe`. Op 5 oktober nagekeken tegen de lijst met goedgekeurde woorden: ze zijn niet
-weggewerkt met Goedkeuren, ze zijn echt van de site verdwenen. Dat is het doel van de app.
+**Stand op 13 oktober.** Alles is opgezet, gedeployd en getest met één echte crawl, en de redactie is begonnen
+met nakijken:
+
+| | |
+|---|---|
+| Repository | `NWW-team/TypoTapir`, branch `main` (squash-merges via pull requests 1 tot en met 4) |
+| Supabase | project **TypoTapir**, `zasfgsgmbapnhfsnqsrp`, regio eu-west-1, URL `https://zasfgsgmbapnhfsnqsrp.supabase.co` |
+| Scherm | GitHub Pages, branch `main`, map `/docs` |
+| Deel van de site | één: `visa-the-netherlands` (alles onder `/visa-the-netherlands`, zonder vertalingen), 1.015 pagina's |
+| Woordenlijst | Debian-pakket `wbritish` 2020.12.07-2 (SCOWL), 103.494 woorden; sha256 vastgelegd in `data/woordenlijst.sha256` |
+| Controles | 137, `python3 scripts/test.py --offline` |
+| Crawls | 1 (12 oktober, zie hieronder) |
+| Goedgekeurd | 77 actieve goedgekeurde woorden en namen en 3 namen als spelfout aangewezen (13 oktober); de redactie is begonnen |
+
+**De eerste crawl (12 oktober, 15.08 uur Nederlandse tijd).** De run duurde 17 minuten (de crawl zelf 15,5)
+en was volledig groen. Hij pakte 1.038 pagina's, **inclusief 360 vertalingen** (`.fr`, `.es`, `.de`), want die
+filter bestond toen nog in een eerdere vorm. Resultaat: 25.205 bevindingen, waarvan 14.080 spelfouten en
+11.125 namen. Daarvan stond 97% van de spelfouten (13.663) op 23 pagina's waarvan de URL op `/fr`, `/es` of
+`/de` eindigt: Franse en Spaanse checklists. De filter is daarna uitgebreid (zie "Vertalingen"), en de 14.864
+bevindingen van die 23 pagina's zijn **met de hand uit die ene crawl verwijderd** (dus `crawls.aantal_paginas`
+zegt 1.038, terwijl er voor 23 pagina's geen bevindingen zijn). Wat in het scherm staat: **417 spelfouten en
+9.924 namen**. Een volgende crawl pakt 1.015 pagina's en heeft de verwijderde rijen niet meer.
+
+**Wat in die 417 zit.** Het is een eerste indruk, niet door de redactie nagelopen:
+- **Amerikaanse spelling**: `center`, `travelers`, `legalized`, `organization`, `authorization`, `organizer`,
+  `authorized`. Terechte meldingen bij Brits Engels met -ise. De site gebruikt kennelijk een mengeling van
+  Amerikaans en Oxford-Engels (-ize). Dit is een **besluit voor de redactie** (zie Open punten).
+- **Goede woorden die de lijst niet kent**, voor Goedkeuren: `payslips` (61 keer op 34 pagina's), `VFS`, `eVisa`,
+  `biometric`, `barcode`, `biodata`, `businessperson`, `intergovernmental`, `non-biometric`, `d'Ivoire`
+  (uit Côte d'Ivoire).
+- **Echte fouten**: `reservationof` (vergeten spatie).
+- **Woorden uit andere talen** in documentnamen: Turks (`dökümü`, `hizmet`), Arabisch (`namah`, `talak`),
+  Italiaans (`verbale`). Waarschijnlijk namen van documenten die de site in de brontaal laat staan.
 
 ## Hoe het in elkaar zit
+
+Precies als bij het origineel:
 
 ```
  Redacteur ── browser ── docs/index.html (GitHub Pages, statisch, supabase-js)
@@ -48,251 +68,213 @@ weggewerkt met Goedkeuren, ze zijn echt van de site verdwenen. Dat is het doel v
                               │ schrijft                 crawl-starten ──► GitHub Actions
                               │                          crawl-stoppen ──► (annuleert de run)
                  GitHub Actions: .github/workflows/crawl.yml
-                 haalt woordenlijst + goedgekeurd + GeoNames, crawlt, publiceert
+                 installeert wbritish, haalt goedgekeurd + GeoNames, crawlt, publiceert
 ```
 
 | Onderdeel | Waar | Wat |
 |---|---|---|
-| Scherm | `docs/index.html`, `docs/xlsx.js`, `docs/icoon*.png` | Eén bestand, geen buildstap. `xlsx.js` maakt de Excel-downloads |
-| Crawler en toets | `scripts/crawl.py` | Sitemaps lezen, pagina's ophalen, spelling toetsen, namen scheiden. Alleen standaardbibliotheek |
-| Plaatsnamen | `scripts/plaatsnamen.py` | Beoordeelt namen tegen GeoNames |
-| Lijsten ophalen | `scripts/haal_goedgekeurd.py` | Haalt `goedgekeurd` en `naam_is_spelfout` op voor de crawl; **stopt de run als dat mislukt** |
-| Voortgang | `scripts/voortgang.py` | Meldt de stand van een crawl aan `crawl_aanvragen` |
-| Publiceren | `scripts/publiceer.py` | Zet het resultaat in `crawls` en `bevindingen` |
-| Controles | `scripts/test.py` | 131 controles, `python3 scripts/test.py --offline` (draait ook in de workflow) |
-| Workflow | `.github/workflows/crawl.yml` | Invoer: `bron`, `aanvraag_id`, `opentaal_ref` |
-| Database | `supabase/migrations/` | Tien migraties, **met de hand toegepast** (zie "Zo werk je eraan") |
-| Edge Functions | `supabase/functions/` | Vier, allemaal `verify_jwt = false`, **met de hand gedeployd** |
+| Scherm | `docs/index.html`, `docs/xlsx.js`, `docs/icoon*.png` | Eén bestand, geen buildstap. Tabs per deel (nu één), crawlknop in de tab, Excel bij Spelfouten (Pagina, Zin met vet woord, Woord, Suggestie, Opmerking) |
+| Crawler en toets | `scripts/crawl.py` | `SITE`, `DELEN`, `is_vertaling`, de toets zelf. Alleen standaardbibliotheek |
+| Overige scripts | `scripts/plaatsnamen.py`, `haal_goedgekeurd.py`, `voortgang.py`, `publiceer.py` | Gelijk aan het origineel |
+| Workflow | `.github/workflows/crawl.yml` | Invoer: `bron` (`demo`, `visa-the-netherlands`) en `aanvraag_id`. Er is geen `opentaal_ref` meer |
+| Database | `supabase/migrations/` | Negen migraties, **met de hand toegepast** |
+| Edge Functions | `supabase/functions/` | Vier, `verify_jwt = false`, **met de hand gedeployd** (12 oktober, versie 1) |
 
 ### Supabase
 
-Project `riwznqurcluudvyrkwxe` (eu-west-2). Tabellen: alle lezen is open voor `anon`, schrijven kan alleen
-met de service-role key (RLS aan, plus `grant select` en de schrijfrechten weggehaald).
+Tabellen, rechten en functies zijn die van het origineel (zie daar voor de beschrijving per tabel). Verschillen:
+- Er is een **extra migratie** `20261001000000_crawls_en_bevindingen.sql`. In het origineel zijn `crawls` en
+  `bevindingen` met de hand aangemaakt en stond dat in geen enkele migratie, waardoor de reeks op een leeg
+  project niet werkt. De Nederlandse woordenlijst-import (`…050000_uitzonderingen_importeren.sql`) is hier
+  weggelaten.
+- `crawl_aanvragen.bron` mag alleen `visa-the-netherlands` zijn (migratie `…070000`).
+- **Hoe het is toegepast**, voor wie de versies in de database vergelijkt: de migraties staan in
+  `supabase_migrations` onder andere namen en tijdstippen (alle 12 oktober), en zijn deels samengevoegd of
+  gesplitst. `open_lezen` is zonder het blok dat bestaande policies verwijdert toegepast (er waren er geen).
+  Voortgang en stoppen (`20261002030000`, `20261005000000`) zijn als één geheel toegepast: de kolommen en de statuscontrole
+  (met `gestopt`) via de MCP, en de **unieke index per dag** (alleen aanvragen die niet `mislukt` of `gestopt`
+  zijn) in de SQL Editor, want `DROP INDEX` loopt via de MCP vast. Gecontroleerd op 12 en 13 oktober: de index
+  heeft de juiste vorm.
+- Gecontroleerd als `anon`: alleen `select` op alle vijf de tabellen, schrijven ingetrokken. De beveiligingscontrole
+  van Supabase (`get_advisors`) meldt niets.
 
-| Tabel | Inhoud |
-|---|---|
-| `crawls`, `bevindingen` | Elke crawl en zijn meldingen. `bevindingen.soort` is `spelfout` of `naam`; bij namen staan `plaats_status` (`bekend`, `twijfel`, `onbekend`) en `suggestie` |
-| `goedgekeurd` | **De enige lijst met goedgekeurde woorden en namen** (412 actief). Intrekken zet `ingetrokken_op`, er wordt niets verwijderd |
-| `naam_is_spelfout` | Namen die de redactie als verkeerd gespeld heeft aangewezen (apart van `goedgekeurd`, bewust). Terugzetten zet `teruggezet_op` |
-| `crawl_aanvragen` | Elke gestarte crawl, met status (`aangevraagd`, `crawlen`, `publiceren`, `klaar`, `mislukt`, `gestopt`, `onbekend`), voortgang en de link naar de run. Een unieke index op de datum (Nederlandse tijd) maakt het "één per dag"; mislukte en gestopte aanvragen tellen niet mee |
-| `toegestane_gebruikers`, `is_toegestaan()` | **Niet meer in gebruik** (de inlog is weg); mogen weg |
-
-Edge Functions: `goedkeuren` (woorden en namen goedkeuren en intrekken), `naam-verplaatsen`,
-`crawl-starten` (start de workflow, hooguit één per dag), `crawl-stoppen` (annuleert de run; stoppen kan niet
-tijdens het opslaan). `goedkeuren` en `naam-verplaatsen` laten maximaal 300 wijzigingen per uur toe.
-
-Secrets: **GitHub** (Actions): `SUPABASE_SERVICE_ROLE_KEY`. **Supabase** (Edge Functions): `GITHUB_TOKEN`,
-een fine-grained token met alleen *Actions: read and write* op deze repository. **Dat token verloopt**,
-na de duur die bij het maken is gekozen; zie "Open punten". De publieke Supabase-key staat bewust in
-`docs/index.html`. De service-role key mag nergens anders staan dan als secret.
+**Secrets.** GitHub (Actions): `SUPABASE_SERVICE_ROLE_KEY`. Supabase (Edge Functions): `GITHUB_TOKEN`, een
+fine-grained token met alleen *Actions: read and write* op `NWW-team/TypoTapir`. Beide staan er en werken
+(de crawl is erdoor gestart en afgerond). **Het token verloopt**; de vervaldatum is niet vastgelegd, zie Open punten.
+De publieke Supabase-key (`sb_publishable_…`) staat bewust in `docs/index.html`.
 
 ### De delen van de site
 
-Een deel is een pad; alles daarachter hoort erbij. De pagina's staan verspreid over de sitemaps van de
-site (de visumpagina's zitten in de grote `paginas`-sitemap), dus de crawler leest ze allemaal en filtert
-op het pad (`DELEN` in `crawl.py`).
+`DELEN` in `crawl.py` heeft één deel:
 
-| Deel | Pad | Pagina's (±) |
+| Deel | Pad | Pagina's |
 |---|---|---|
-| Reisadviezen | `/reisadvies` | 236 |
-| Visum voor Nederland | `/visum-nederland` | 1.015 |
-| Visum voor Caribische Koninkrijksdelen | `/caribisch-visum` | 452 |
-| Ambassades en consulaten | `/contact/ambassades-consulaten-generaal` | 219 |
+| Visa for the Netherlands | `/visa-the-netherlands` | 1.015 (Engels, zonder vertalingen) |
 
-Een crawl pakt altijd het hele deel (er is geen maximumaantal; `crawl.py --max-paginas` bestaat nog voor
-lokaal testen, standaard 5000). "Overige pagina's" (de rest van de ±4.900) is geen keuze. Een deel
-toevoegen: `DELEN` in `crawl.py`, dezelfde naam in de workflow, in `crawl-starten`, in de controle op
-`crawl_aanvragen.bron` en in `DEEL_INFO` in `docs/index.html`.
+De sitemaps hebben 5.849 URL's. Het deel heeft er 1.398, waarvan 383 vertalingen. Overige bovenste paden
+(telling inclusief vertalingen), voor als er delen bij moeten komen:
+
+| Pad | URL's | Pad | URL's |
+|---|---|---|---|
+| `/passport-id-card` | 878 | `/consular-fees` | 267 |
+| `/declaration` | 868 | `/contact` | 222 |
+| `/caribbean-visa` | 581 | `/making-appointment` | 219 |
+| `/legalisation` | 310 | `/digid-abroad` | 136 |
+| `/civic-integration-exam-abroad` | 271 | `/marry` (84), `/dutch-nationality` (57) | |
+
+Een deel toevoegen kost (in deze volgorde): een regel in `DELEN`, de naam in `options` van de workflow, een migratie
+voor de controle op `crawl_aanvragen.bron`, `BRONNEN` in `crawl-starten` én een regel in `DEEL_INFO` in
+`docs/index.html`. Eerst de workflow mergen, dan de Edge Function deployen: GitHub weigert een invoer die de
+workflow niet kent.
+
+### Vertalingen
+
+De site zet vertalingen **naast** de Engelse pagina, op twee manieren: als achtervoegsel
+(`/visa-the-netherlands/waiting-time-after-visa-application.fr`) en als laatste deel van het pad
+(`/visa-the-netherlands/checklist-schengen-visa-seafarer/fr`). Het veld `lang` in de pagina zegt bij alle
+`en`, dus alleen de URL verraadt ze. Zonder filter meldt een Britse woordenlijst elk Frans, Spaans en Duits
+woord als fout (13.663 meldingen in de eerste crawl). `is_vertaling()` in `crawl.py` herkent een achtervoegsel van
+twee letters met een punt, en `/fr`, `/es`, `/de` als laatste padsegment. Het tweede geval is bewust beperkt tot
+die drie talen: een willekeurig segment van twee letters (`/us`) kan een gewone pagina zijn. Komt er een taal bij
+(bijvoorbeeld `/nl`), voeg die dan toe aan `TALEN` in `crawl.py`; de tests staan in `scripts/test.py`
+("Delen van de site"). De crawl meldt in het logboek hoeveel vertalingen hij overslaat.
+
+Pagina's in het Engels bevatten wel een taalkeuze: "Language selection: English Change language: Deutsch Español
+Français". Die woorden komen als namen in de lijst. Goedkeuren (één keer) of de tekst uit de crawl halen.
+
+### De woordenlijst
+
+De workflow doet `sudo apt-get install wbritish` en gebruikt `/usr/share/dict/british-english` als
+`data/woordenlijst.txt`. Dat is SCOWL 2020.12.07, Brits met -ise, 103.494 regels (121.814 vormen na het toevoegen
+van kleine letters). Gekozen omdat het een pakket is dat Ubuntu beheert, en dus geen URL die kan verdwijnen:
+de oorspronkelijke SCOWL is sinds februari 2026 vervangen door een nieuw formaat. De run controleert het aantal
+regels (minstens 50.000), print de sha256 en waarschuwt als *organise*, *colour*, *don't* of *London's* ontbreekt
+of *color* erin staat. Bij de eerste crawl waren er geen waarschuwingen. Wijkt de sha256 af van
+`data/woordenlijst.sha256`, dan waarschuwt de run en gaat hij door; klopt de nieuwe lijst, werk dan dat bestand bij.
+
+Woorden met een apostrof ("don't", "London's", "countries'") worden goed behandeld zolang ze in de lijst staan
+of op een bekend woord eindigen op `'s` (`is_bekend` in `crawl.py`). Samengestelde woorden met een
+koppelteken worden per deel getoetst. Zie de tests onder "Engelse tekst".
+
+De **demopagina's en de tests voor de toets zelf zijn nog Nederlands** (`demo/`, `data/woordenlijst-demo.txt`,
+de voorbeeldzinnen in `scripts/test.py`). Dat testen de code, niet de taal, en het werkt; maak ze Engels als
+je ze aanpast. De uitleg in het scherm en in de documenten is Nederlands.
 
 ## Zo werk je eraan
 
 **Normaal verloop.** Branch maken vanaf `main`, aanpassen, `python3 scripts/test.py --offline`, pushen, PR,
-mergen. Mergen naar `main` publiceert het scherm via GitHub Pages (een minuut of twee, daarna hard
-verversen). **Wat niet vanzelf gaat:**
-- **Migraties** worden niet door een pipeline toegepast. Plak ze in de SQL Editor van het Supabase-dashboard,
-  of draai ze via de MCP. Alle tien zijn toegepast (gecontroleerd op 5 oktober). Controleer na een nieuwe tabel altijd de
-  *policy én de grants*, en toets als `anon` (`begin; set local role anon; select …; rollback;`): een policy
-  zonder `grant select` geeft "permission denied for table" (zo ging het mis bij de eerste inlogloze versie).
-- **Edge Functions** worden niet door een pipeline gedeployd. Deploy via het dashboard (Edge Functions) of via
-  de MCP (`deploy_edge_function`), met **Verify JWT uit**, en neem de bestanden uit `supabase/functions/`
-  over. De map en wat live staat kunnen uit de pas lopen; vergelijk met `get_edge_function`.
-- **Volgorde bij een wijziging aan de workflow-invoer:** eerst de workflow mergen, dan de functie die hem
-  aanroept deployen. GitHub weigert een invoer die de workflow niet kent.
+mergen. Mergen naar `main` publiceert het scherm via GitHub Pages (een minuut of twee, daarna hard verversen).
+In het dagelijks gebruik betekent "deploy" hier: de pull request mergen, en voor Supabase de migratie of de
+Edge Function zelf toepassen. **Wat niet vanzelf gaat:**
+- **Migraties** worden niet door een pipeline toegepast; plak ze in de SQL Editor of draai ze via de MCP. Controleer
+  na een nieuwe tabel de policy én de grants, en toets als `anon`. **`DROP INDEX` en soms meerdere
+  statements in één opdracht lopen via de MCP vast** (time-out na 60 s); doe zulke opdrachten in de SQL Editor,
+  en controleer na een time-out eerst wat er is toegepast, want de opdracht kan half geslaagd zijn.
+- **Edge Functions** worden niet door een pipeline gedeployd. Deploy via het dashboard of de MCP
+  (`deploy_edge_function`), met **Verify JWT uit**, en neem de bestanden uit `supabase/functions/` over.
+- **Cache.** `xlsx.js` en de iconen worden met een versienummer geladen (`xlsx.js?v=2`, `icoon.png?v=2`). Wijzig je
+  `xlsx.js` of een icoon, **verhoog dan het versienummer** in `docs/index.html`, anders houden browsers (en de cache
+  van GitHub Pages) een oude kopie vast. Zo ging het mis bij het origineel: een Excel met `[object Object]`.
+- **Git in Claude Code op het web.** De ontwikkelbranch heet `claude/serene-allen-blqd14`. Na een squash-merge loopt die
+  achter op `main`; zet hem voor een nieuwe wijziging opnieuw op vanaf `main`
+  (`git fetch origin main && git checkout -B claude/serene-allen-blqd14 origin/main`) en push met
+  `--force-with-lease`. Een stophook meldt anders onuitgepushte commits die al op `main` staan. De clone is ondiep en
+  volgt alleen `main`: `git remote set-branches --add origin claude/serene-allen-blqd14`.
 
-**Werken in Claude Code op het web.** De omgeving heeft beperkte netwerktoegang; dat is beleid, geen storing.
+**Netwerk in Claude Code op het web.** De omgeving staat standaard dicht voor sites buiten een lijst. Voor deze app
+is `www.netherlandsworldwide.nl` toegevoegd onder *Allowed domains* (de menu-instelling van de cloudomgeving,
+Network access); daarmee kan Claude de sitemap, `robots.txt` en pagina's lezen. Niet bereikbaar zijn onder meer
+github.com en de Pages-link zelf, `*.supabase.co` rechtstreeks, download.geonames.org, PyPI en het npm-register. De
+GitHub- en Supabase-koppelingen (MCP) werken wel. De echte woordenlijst (`wbritish`) en GeoNames zijn dus
+alleen in de workflow te gebruiken.
 
-| Wel bereikbaar | Niet bereikbaar |
-|---|---|
-| www.nederlandwereldwijd.nl | github.com, raw.githubusercontent.com en de eigen Pages-link |
-| Supabase en GitHub, alleen via de MCP-koppelingen | `*.supabase.co` rechtstreeks, poort 5432 |
-| | **download.geonames.org** (de plaatsnamenlijst), PyPI, het npm-register, CDN's |
-
-- De OpenTaal-woordenlijst en GeoNames zijn dus **niet lokaal te downloaden**; de echte spelling- en
-  plaatsnamentoets draait alleen in de workflow. Lokaal valt `crawl.py` terug op een testlijst
-  (`data/woordenlijst-demo.txt`).
-- De Pages-link, het inloggen en een echte crawl via de knop zijn hier niet te zien; dat moet iemand in een
-  gewone browser doen.
-- **Supabase via de MCP:** lezen werkt altijd; schrijven werkt meestal. Een `DROP INDEX` loopt er steeds
-  vast (time-out na 60 s, ook met `lock_timeout` en `concurrently`, terwijl niets de tabel vasthoudt):
-  draai zo'n opdracht in de SQL Editor. Meerdere statements in één opdracht lopen soms vast; doe ze dan
-  los. Na een time-out: controleer eerst wat er is toegepast, want de opdracht kan half geslaagd zijn.
-- De tools staan toe zonder vragen te stellen via `.claude/settings.local.json` (in `.gitignore`, dus
-  niet in de repository): `execute_sql`, `apply_migration`, `deploy_edge_function` en wat leesopdrachten.
-  In een nieuwe omgeving ontbreekt dat bestand en komen de toestemmingsvragen terug.
-- **Testen in een browser:** Chromium staat op `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`
-  (`--headless --dump-dom`). Voor een echte schermbreedte (kleiner dan 500 pixels laat `--window-size`
-  niet toe) is Playwright via Node beschikbaar. De pagina laadt supabase-js van een CDN die dicht staat;
-  vervang die in een testkopie door een nagemaakte cliënt en `fetch`. Zo zijn alle knoppen getoetst.
-- **Node** (22.18 of nieuwer) draait de TypeScript-tests van de Edge Functions
-  (`supabase/functions/*/…test.ts`); `test.py` slaat ze over als Node te oud is, zodat een crawl er nooit
-  door strandt. Een echte **Excel** of LibreOffice met rekenblad is er niet.
+**Zo lees je het logboek van een crawl.** GitHub › Actions › de run › job `crawl`. Stap *Woordenlijst ophalen* toont
+versie, regels, sha256 en waarschuwingen; stap *Crawlen en spelling toetsen* toont het aantal pagina's en de
+vertalingen die zijn overgeslagen, en eindigt met het aantal bevindingen. Claude kan dit via de GitHub-koppeling
+zelf lezen (`actions_list`, `get_job_logs`; het logboek is groot, dus lees het uit het opgeslagen bestand).
+Twee dingen zijn geen fout: "LET OP: er zijn geen goedgekeurde woorden" zolang er nog niets goedgekeurd is, en
+"Voortgang melden mislukte (Connection refused)" (dat is een test van de workflow die een onbereikbare server nabootst).
 
 ## Open punten
 
 In volgorde van belang.
 
-1. **Het GitHub-token verloopt.** Zonder werken Crawl starten en Crawl stoppen niet meer (de foutmelding
-   zegt "GitHub weigerde …"). Kijk onder GitHub › Settings › Developer settings › Fine-grained tokens
-   wanneer het afloopt, zet een herinnering, maak dan een nieuw token (zelfde rechten) en vervang het
-   Supabase-secret `GITHUB_TOKEN`. Een organisatie kan een nieuw token eerst moeten goedkeuren.
-2. **De sitebeheerder van nederlandwereldwijd.nl inlichten (besluit 2).** We houden ons aan `robots.txt`,
-   een halve seconde tussen pagina's en een herkenbare User-Agent, maar het is netjes dat ze het van ons
-   horen. Dit is dringender geworden: er zijn meer en grotere crawls (Visum voor Nederland is 1.015
-   pagina's, ruim 20 minuten aanhoudend verkeer), en iedereen met de link kan er één per dag starten.
-3. **Een Excel-download één keer in Excel openen.** `docs/xlsx.js` is alleen op structuur getoetst (geldige
-   XML, verwijzingen, stijlen, tekst blijft tekst, besturingstekens, celgrens 32.767), niet in een echte
-   Excel. Meldt Excel dat het bestand hersteld moet worden, dan zit de fout in `xlsx.js`.
-4. **De plaatsnamencheck bijstellen** (voorstel, nog niet gedaan; zie "Plaatsnamen" hieronder). Verwacht:
-   Nederlandse woorden in een naam overslaan en suggesties beperken tot plaatsen vanaf ±100.000
-   inwoners, wat een groot deel van de valse twijfel wegneemt.
-5. **De visumcrawls zijn nog niet gedraaid.** De spellingtoets is alleen op reisadviezen geijkt (de
-   hoofdletterregel voor namen en de ruiscijfers). Op formulieren en visumpagina's kan de ruis anders
-   liggen: reken bij de eerste crawls op veel valse meldingen en loop ze met de redactie door.
-6. **De 11 echte fouten die nog op de site staan** (zie "In het kort") naar de webredactie. De sjabloonfout
-   `undefined` op `reisadvies/estland`, die bij de sitebeheerder hoorde en niet bij de redactie, is
-   inmiddels verdwenen. Wie dit oppakt, is nog niet aangewezen.
-7. **Opruimen** (geen haast): `toegestane_gebruikers` en `is_toegestaan()` zijn ongebruikt;
-   `crawl_aanvragen.max_paginas` staat sinds 5 oktober altijd op 5000; `docs/resultaten.json` zit nog in de
-   git-geschiedenis van de publieke repository (citaten uit openbare pagina's); oude crawls worden nooit
-   opgeruimd (16.805 bevindingen in 7 crawls; bij elke crawl komen er duizenden bij).
-8. **Een eigenaar bij de webredactie.** Zonder eigenaar verdwijnt zo'n prototype. Die beheert de lijst
-   met goedgekeurde woorden (`goedgekeurd`), loopt de namen na, en start de crawl.
+1. **De eerste resultaten nalopen**: de redactie is begonnen (77 woorden goedgekeurd op 13 oktober). Verder:
+   terechte woorden goedkeuren (zie "Wat in die 417 zit"), de namenlijst doorlopen, en de echte fouten (zoals
+   `reservationof`) naar de webredactie sturen.
+2. **Besluit over Amerikaanse spelling.** De toets is Brits met -ise. De site gebruikt `center`, `travelers`
+   (Amerikaans) en `organization`, `authorized` (Oxford, -ize). Past de redactie de site aan, dan zijn dit
+   terechte meldingen. Wil de redactie -ize toestaan, dan is de woordenlijst anders nodig (het Britse -ize-bestand
+   van SCOWL; `wbritish` heeft het niet) of moet het worden goedgekeurd. Keur **niet** goed wat de redactie wil laten
+   aanpassen.
+3. **Een tweede crawl**, ten vroegste de volgende dag (één per dag). Verwacht: 1.015 pagina's, 383 vertalingen
+   overgeslagen, "Woordenlijst is ongewijzigd ten opzichte van data/woordenlijst.sha256", en een kleinere
+   spelfoutenlijst (goedgekeurde woorden zijn dan weg). Kijk of de namenlijst kleiner is en of er nog
+   anderstalige pagina's tussen zitten.
+4. **De namenlijst is groot (9.924).** De crawler behandelt elke hoofdletter midden in een zin als naam; op een
+   visumsite zijn dat vooral landen en plaatsen. Mogelijke verbeteringen (nog niet gedaan): alles wat ook met een
+   kleine letter in de woordenlijst staat niet als naam tellen (veel koppen en titels), de taalkeuze-woorden
+   weglaten, en de plaatsnamencheck bijstellen. Bekijk eerst een tweede crawl.
+5. **Het GitHub-token verloopt.** Zonder werken Crawl starten en Crawl stoppen niet meer ("GitHub weigerde …").
+   De vervaldatum is niet genoteerd: kijk onder GitHub › Settings › Developer settings › Fine-grained tokens, zet
+   een herinnering, maak dan een nieuw token (zelfde rechten, alleen deze repository) en vervang het
+   Supabase-secret `GITHUB_TOKEN`.
+6. **De sitebeheerder van netherlandsworldwide.nl inlichten.** We houden ons aan `robots.txt` (blokkeert alleen
+   `/search?*` en `/api/*`), een halve seconde tussen pagina's en een herkenbare User-Agent
+   (`TypoTapir/0.1 (+https://github.com/NWW-team/TypoTapir)`), maar het is netjes dat ze het van ons horen.
+   Iedereen met de link kan één crawl per dag starten.
+7. **Meer delen van de site** (zie de tabel hierboven), zodra de redactie dat wil.
+8. **De taal van de interface.** De site die de app bekijkt is Engels; het scherm en de documentatie zijn
+   Nederlands. Dat is nu zo gelaten. Wordt het scherm ook voor Engelstalige gebruikers bedoeld, dan moeten de
+   teksten in `docs/index.html` vertaald worden.
+9. **Opruimen** (geen haast): de README is deels nog Nederlands van herkomst; de demopagina's en testzinnen zijn
+   Nederlands (zie boven).
+10. **Een eigenaar bij de webredactie.** Zonder eigenaar verdwijnt zo'n prototype.
 
-## Besluiten
+## Wat anders is dan bij SpellingSpeurneus
 
-De nummers staan in code en commentaar (`besluit 6` en dergelijke); ze zijn dus niet opgeschoond.
+| | SpellingSpeurneus | TypoTapir |
+|---|---|---|
+| Site | nederlandwereldwijd.nl | netherlandsworldwide.nl |
+| Taal | Nederlands (OpenTaal) | Brits Engels, -ise (SCOWL, `wbritish`) |
+| Delen | vier | één (`visa-the-netherlands`) |
+| Vertalingen | niet van toepassing | `.fr`, `.es`, `.de`, `/fr`, `/es`, `/de` overgeslagen |
+| Woordenlijst ophalen | download van OpenTaal, sha256 in `data/opentaal.sha256` | `apt-get install wbritish`, sha256 in `data/woordenlijst.sha256` |
+| Supabase | `riwznqurcluudvyrkwxe` (eu-west-2) | `zasfgsgmbapnhfsnqsrp` (eu-west-1) |
+| Goedgekeurde woorden | 924 actief | 77 actief (13 oktober) |
+| Logo | hond | tapir |
+| Migraties | tien, de basistabellen met de hand | negen, met de basistabellen erbij |
 
-**1. De eigennamen: gescheiden, niet weggegooid.** (14 september) Van de 614 meldingen op de eerste crawl
-waren er 573 een plaatsnaam, organisatie of anderstalige bronnaam middenin een zin, en daarin zat geen
-enkele verkeerd gespelde plaatsnaam. OpenTaal kent geen namen, dus de app kon een foute naam niet
-herkennen. Gekozen is voor twee lijsten in hetzelfde resultaat: **spelfouten** (open bij binnenkomst)
-en **namen** (ontdubbeld, met aantal pagina's). De regel: een hoofdletter middenin een zin is een naam
-(`soort_van` in `crawl.py`); een vergeten spatie (`III.Let`) gaat voor. Sinds 5 oktober beoordeelt GeoNames
-de namen (zie hieronder) en kan de redactie namen goedkeuren of naar de spelfouten verplaatsen.
+**Een wijziging die in beide apps hoort, moet je twee keer doen**: het zijn kopieën, geen gedeelde code. Dat gold
+voor de laatste wijzigingen aan de Excel, de tabs en de caching: die staan in beide.
 
-**2. De sitebeheerder inlichten.** Open: zie Open punten.
+## Verder werken in een nieuwe chat
 
-**3. De bevindingen achter een inlog.** (15 september) **Teruggedraaid door besluit 6.** De inlog zat in
-Supabase Auth met een allowlist; hij schermde de gegevens af, niet de pagina.
+Alles wat Claude nodig heeft staat in de repository en in dit document. Zet klaar:
 
-**4. Moet de pagina zelf ook privé?** Vervallen met besluit 6. Voor wie het ooit wil: GitHub Pages kan geen
-toegangscontrole; dan is andere hosting nodig (bijvoorbeeld Cloudflare Access ervoor).
+1. **Toegang.** De GitHub-koppeling met `NWW-team/TypoTapir` (en `NWW-team/SpellingSpeurneus` als je de Nederlandse
+   app ook raakt) en de Supabase-koppeling. Zet `www.netherlandsworldwide.nl` onder *Allowed domains* van de
+   cloudomgeving als Claude de site moet kunnen bekijken.
+2. **Een eerste bericht**, bijvoorbeeld:
 
-**5. Wie beheert de allowlist?** Vervallen met besluit 6.
+   > Lees `OVERDRACHT.md` en `README.md` in NWW-team/TypoTapir (de Engelstalige variant van SpellingSpeurneus, het
+   > Supabase-project heet TypoTapir). Daarna wil ik: …
 
-**6. De inlog gaat weer weg.** (2 oktober) Op verzoek van de redactie is er geen inlogscherm meer en zijn
-de bevindingen leesbaar voor iedereen met de publishable key, die in `docs/index.html` in een publieke
-repository staat. De pagina is via een link bereikbaar die niet wordt aangekondigd, maar **dat is geen
-toegangscontrole**: wie de repository leest, vindt de link en de key. Bewust gekozen, met het risico erbij.
-Gevolgen die je moet kennen:
-- Iedereen met de key kan **woorden en namen goedkeuren, namen verplaatsen, een crawl starten en een
-  lopende crawl stoppen**. De bescherming is een limiet (300 wijzigingen per uur; één crawl per dag),
-  een bevestigingsvraag bij starten en stoppen, en dat alles terug te draaien is en wordt bewaard. Een
-  kwaadwillende kan echte fouten wegwerken met Goedkeuren, of de dagelijkse crawl opmaken. Kijk af en toe
-  op het tabblad Goedgekeurd.
-- Wil de redactie dit ooit dichtzetten, dan is een inlog of een code de weg, en dat vraagt andere hosting
-  dan GitHub Pages voor het scherm.
-
-## Hoe de toets werkt, en wat we ervan weten
-
-- Een woord wordt getoetst aan de **OpenTaal-woordenlijst** (413.000 vormen, vastgelegd met een sha256 in
-  `data/opentaal.sha256`; de workflow waarschuwt als hij verandert) en aan de lijst `goedgekeurd`.
-- **De hoofdletterregel is alleen op reisadviezen geijkt.** Reken op de eerste crawl over onbekend terrein
-  op ~2,2 valse meldingen per pagina (gemeten: 0,84 op de al opgeschoonde eerste 50, 2,19 op de 176 die
-  daarna voor het eerst langskwamen). Dat is de aard van zo'n lijst, geen fout.
-- **Sjabloonresten** (`undefined`, `[object Object]`, `{{titel}}`, `&nbsp;`) worden altijd gemeld, bovenaan.
-  Het scherm toont ze met een eigen vakje; `SJABLOONRESTEN` in `crawl.py` en `SJABLOONREST` in
-  `docs/index.html` moeten gelijk blijven.
-- **Anderstalige woorden zonder hoofdletter** (`and`, `for`, `travel`) staan bij de spelfouten. Ze zijn op
-  15 september door de redactie goedgekeurd, met als gevolg dat een Engels woord middenin een Nederlandse
-  zin nooit meer opvalt; dat is hun keuze. Voor nieuwe gevallen geldt hetzelfde.
-- **`persoons-`** uit "persoons- en bagagecontrole" wordt getoetst als `persoons`: bij een weglatingsstreepje
-  is niet vast te stellen wat het hele woord is.
-- **Huisstijl:** `lhbtiq+` altijd met de plus (zonder plus meldt de app het); `mpox` en `apenpokken` staan
-  allebei goed omdat de site beide gebruikt; `etc` is goed (de zinsopdeling haalt de punt weg).
-- **De lijst met goedgekeurde woorden** is op 2 oktober uit `data/uitzonderingen.txt` (280 woorden, in vijf
-  rondes gegroeid, de laatste twee van de redactie) in de database ingeladen en uit de repository
-  gehaald. De geschiedenis staat in git. Wat de redactie nu goedkeurt is er direct, en de volgende crawl
-  slaat het over.
-
-### Plaatsnamen (GeoNames)
-
-Elke naam krijgt een oordeel (`scripts/plaatsnamen.py`): **bekend** (staat in GeoNames, accenten tellen niet
-mee), **twijfel** (staat er niet in maar lijkt op een bekende plaats, met suggestie) of **onbekend**. Alleen
-buitenland. Het matchen is Damerau-Levenshtein met de grens 1 (woorden van 5 tot 8 letters) of 2 (vanaf
-9); woorden korter dan 5 letters krijgen geen suggestie; de eerste letter moet gelijk zijn. Suggesties komen
-uit plaatsen vanaf 15.000 inwoners (`MIN_INWONERS_SUGGESTIE`), regio's en landen; "bekend" telt alle plaatsen
-vanaf 1.000 inwoners met alle alternatieve namen. De workflow haalt GeoNames per run op (CC BY 4.0, vermeld
-in README en voettekst); mislukt dat, dan krijgen namen geen oordeel en gaat de crawl door.
-
-**Eerste meting (5 oktober, 236 reisadviezen):** 1.380 unieke namen: 884 bekend, 98 "lijkt op", 398 zonder
-oordeel. De 98 zijn door mij doorgelezen, **niet door de redactie nagelopen**: ongeveer een kwart zijn
-echte tikfouten of afwijkende schrijfwijzen (`Bahamar`, `Guyaquil`, `Hairi`, `Mauritus`, `Noukachott`,
-`Snedai`, `Karakalkpakstan`). De rest is valse twijfel, in vier soorten:
-1. **Een Nederlands woord als deel van een naam**: `EHIC-kaart` en `Express-kaart` ~ `Kaarst`,
-   `Paleski-reservaat` ~ `Reserva`, `Chaambi-gebergte`, `Gedeo-zone`, `Khamsin-wind`.
-   Oplossing: delen die in de woordenlijst staan overslaan.
-2. **Gewone Engelse, Franse of Spaanse woorden**: `Survey` ~ `Surrey`, `Waiver` ~ `Waver`, `Campaign`,
-   `Danger`, `Local`, `Markets`, `Prefectural`, `Observatory`, `Meteo`. Oplossing: een hogere
-   inwonersgrens voor suggesties.
-3. **Echte plaatsen die ontbreken** (kleiner dan 1.000 inwoners, of geen stad): `Tikal`, `Sinabung`, `Marapi`,
-   `Wagah`, `Moorea`. Goedkeuren lost het blijvend op.
-4. **Landnamen in een andere taal of met trema**: `Transnistrië` ~ `Transnistria`, `Polynésie`, `Latvija`.
-
-Beperkingen: een naam die alleen in het buitenland bestaat maar op de pagina iets anders bedoelt, valt niet
-op; `Cordoba` naast `Córdoba` zijn beide "bekend", dus een accentverschil tussen pagina's wordt niet
-gemeld; een suggestie is een hint, geen oordeel.
-
-## Risico's en bekende beperkingen
-
-- **Een gestopte crawl laat niets achter**, maar wat tot dan toe is gevonden gaat verloren: de crawl
-  publiceert pas aan het eind. Stoppen kan niet tijdens het opslaan. Er blijft een gat van een seconde
-  tussen de controle en het annuleren; valt een klik daar precies in, dan staat er een onvolledige crawl
-  in `crawls`: verwijder die dan met de hand.
-- **Het Supabase-project was op 2 oktober tijdelijk "COMING_UP"** en toonde even een lege database (de
-  tabellen kwamen daarna terug). De oorzaak is niet vastgesteld. Het gratis niveau pauzeert een project
-  na een tijd zonder gebruik; dat is een aanname. Controleer bij vreemd gedrag eerst de projectstatus.
-- **Alleen de tekst in `<main>`** wordt gelezen. Menu's, voetteksten en cookiemeldingen blijven buiten
-  beeld. Verandert de site van structuur, dan is dit de aanname die als eerste breekt. Eén taal: komen er
-  anderstalige pagina's, dan meldt de app ze als één grote fout.
-- **Een crawl over een deel waar de sitemaps geen enkele URL meer voor hebben** stopt met een foutmelding,
-  in plaats van stil niets te doen.
-- Een late melding van de runner kan een gestopte of mislukte aanvraag niet meer op "crawlen" zetten (de
-  update werkt alleen op lopende aanvragen).
-- **Het scherm** is getoetst in Chromium met nagemaakte gegevens, niet in Safari of Firefox, en de pagina
-  schuift niet zijwaarts van 280 tot 1.200 pixels breed (gemeten).
-
-## Wat er bewust niet in zit
-
-Grammatica, stijl en d/t-fouten · alle pagina's van de site in één run (alleen de vier delen) · continu of
-gepland scannen · meerdere talen · terugschrijven naar het CMS · inloggen, rollen of rechten per gebruiker ·
-bevindingen bewaren om trends over tijd te zien (de oude crawls staan er wel, maar het scherm toont alleen de
-nieuwste) · afgeschermde of interne pagina's · een maximumaantal pagina's per crawl.
-
-## Vormgeving
-
-Het scherm benadert de Rijkshuisstijl in de **kleuren** (donkerblauw, hemelblauw, geel markeerveld), elke
-tekstkleur op WCAG AA-contrast getoetst, in de lichte en de donkere stand. Er zit bewust **geen logo,
-woordmerk of Rijksoverheid-lettertype** in, zodat de pagina niet voor een officiële pagina van de
-Rijksoverheid wordt aangezien; het icoon is de eigen hond van de app. Wie het verder officieel wil maken,
-moet dat eerst met de huisstijlbeheerder bij BZ afstemmen. Zie "Vormgeving" in [README.md](README.md).
+3. **Werkafspraken** die tot nu toe golden en niet uit de code te halen zijn:
+   - Antwoorden in het Nederlands, kort, met erbij wat is gecontroleerd en wat niet (een echte browser, Excel,
+     de live site en de Pages-link zijn vaak niet te testen).
+   - Een wijziging per verzoek, gecommit en gepusht op `claude/serene-allen-blqd14`. **Een pull request, mergen en
+     deployen gebeuren pas na een uitdrukkelijk verzoek**; Claude vraagt dat na elke wijziging.
+   - Schrijven in Supabase (migratie, Edge Function, gegevens verwijderen) alleen na akkoord, en liefst met de
+     telling van wat er verandert vooraf. Zo is op 12 oktober gebeurd bij het verwijderen van de 14.864
+     bevindingen van de vertalingen.
+   - Sleutels en tokens nooit in de chat: de service-role key zet de redacteur zelf als GitHub-secret, het
+     GitHub-token als Supabase-secret (de koppeling heeft daarvoor een opdracht die de waarde alleen in het
+     dashboard laat invullen). De publishable key mag wel in de code.
+   - Na het mergen van `docs/` een minuut of twee wachten en hard verversen.
+4. **Checklist bij een wijziging aan het scherm:** `python3 scripts/test.py --offline`; het script in `docs/index.html`
+   op syntaxis (`node --check`); het versienummer van `xlsx.js` of het icoon verhogen als je die wijzigt; README en dit
+   document bijwerken als het gedrag, de kolommen of de cijfers veranderen.
+5. **Checklist bij een nieuwe crawl:** lees het logboek (zie "Zo lees je het logboek van een crawl"), vergelijk met
+   "Wat je dan verwacht" bij Open punten 3, en kijk bij een afwijking eerst naar `docs/` en `scripts/crawl.py`
+   (vertalingen, taalkeuze, woordenlijst) voor je iets aan de database doet.
