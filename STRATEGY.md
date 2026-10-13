@@ -3,7 +3,10 @@ name: SpellingSpeurneus
 last_updated: 2026-10-05
 ---
 
-# SpellingSpeurneus — Strategie
+# TypoTapir — Strategie
+
+> Dit document is overgenomen van SpellingSpeurneus, de Nederlandse variant. De doelen en de aanpak gelden ook voor
+> TypoTapir (Engelstalig, netherlandsworldwide.nl); de voorbeelden en cijfers zijn van het Nederlandse origineel.
 
 ## Doelprobleem
 

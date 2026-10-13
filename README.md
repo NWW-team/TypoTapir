@@ -1,18 +1,17 @@
 # TypoTapir
 
-> **TypoTapir is de Engelstalige variant van [SpellingSpeurneus](https://github.com/NWW-team/SpellingSpeurneus)**
-> en zoekt spelfouten op [netherlandsworldwide.nl](https://www.netherlandsworldwide.nl) (Brits Engels, -ise).
-> De rest van dit document is nog van het Nederlandse origineel: waar het over nederlandwereldwijd.nl,
-> OpenTaal, de delen "reisadvies" of "visum-nederland" gaat, geldt voor TypoTapir `netherlandsworldwide.nl`,
-> SCOWL (via het pakket `wbritish`) en het ene deel `visa-the-netherlands`. De werkwijze en de opbouw zijn gelijk.
+Zoekt spelfouten op [netherlandsworldwide.nl](https://www.netherlandsworldwide.nl) (Brits Engels, spelling op
+*-ise*), wanneer de webredacteur daarom vraagt. TypoTapir is de Engelstalige variant van
+[SpellingSpeurneus](https://github.com/NWW-team/SpellingSpeurneus), dat hetzelfde doet voor
+nederlandwereldwijd.nl. Zie [OVERDRACHT.md](OVERDRACHT.md) voor de stand van zaken, de open punten en wat je moet
+weten als je hieraan verder werkt (ook voor een nieuwe chat met Claude), en [STRATEGY.md](STRATEGY.md) voor het
+waarom.
 
+**Resultaten bekijken:** https://nww-team.github.io/TypoTapir/ — zonder inlog. Zie [Toegang](#toegang).
 
-Zoekt spelfouten op [nederlandwereldwijd.nl](https://www.nederlandwereldwijd.nl),
-wanneer de webredacteur daarom vraagt. Zie [STRATEGY.md](STRATEGY.md) voor het waarom
-en [OVERDRACHT.md](OVERDRACHT.md) voor de stand van zaken, de openstaande besluiten
-en wat je moet weten als je hieraan verder werkt.
-
-**Resultaten bekijken:** https://nww-team.github.io/SpellingSpeurneus/ — zonder inlog. Zie [Toegang](#toegang).
+> Delen van dit document komen uit het Nederlandse origineel. Waar nog "OpenTaal", "reisadvies", "visum-nederland"
+> of een Nederlandse sitenaam staat, geldt voor TypoTapir: de woordenlijst `wbritish` (SCOWL), het ene deel
+> `visa-the-netherlands` en `netherlandsworldwide.nl`. De werkwijze en de opbouw zijn gelijk.
 
 ## Hoe het werkt
 
@@ -23,7 +22,7 @@ en wat je moet weten als je hieraan verder werkt.
    lopende crawl is te volgen aan de voortgangsbalk en met **Crawl stoppen** te stoppen.
 2. Een GitHub-runner leest de sitemaps, haalt de pagina's van het gekozen deel op en pakt de
    tekst uit het `<main>`-element. Menu's en voetteksten blijven buiten beeld.
-3. Elk woord wordt getoetst aan de OpenTaal-woordenlijst en aan de goedgekeurde woorden
+3. Elk woord wordt getoetst aan de Britse woordenlijst (SCOWL, via het Debian-pakket `wbritish`) en aan de goedgekeurde woorden
    en namen in Supabase (tabel `goedgekeurd`, zie [Vals alarm wegwerken](#vals-alarm-wegwerken)).
 4. Wat overblijft wordt in tweeën gedeeld: **spelfouten** en **namen**. Zie hieronder.
 5. Het resultaat gaat naar Supabase en verschijnt op de pagina hierboven.
@@ -53,23 +52,20 @@ Je kiest een deel van de site; alles onder dat pad hoort erbij.
 
 | Deel | Pad | Pagina's (±) |
 |---|---|---|
-| Reisadviezen | `/reisadvies` | 236 |
-| Visum voor Nederland | `/visum-nederland` | 1.015 |
-| Visum voor Caribische Koninkrijksdelen | `/caribisch-visum` | 452 |
-| Ambassades en consulaten | `/contact/ambassades-consulaten-generaal` | 219 |
+| Visa for the Netherlands | `/visa-the-netherlands` | 1.015 |
 
-De pagina's staan verspreid over de sitemaps van de site (de visumpagina's zitten in de
-grote `paginas`-sitemap), dus de crawler leest ze allemaal en houdt over wat onder het pad
-valt. Een deel toevoegen is één regel in `DELEN` in `scripts/crawl.py`, plus dezelfde naam in
+De pagina's staan verspreid over de sitemaps van de site, dus de crawler leest ze allemaal en houdt over wat
+onder het pad valt. **Vertalingen worden overgeslagen**: de site zet Franse, Spaanse en Duitse versies naast de
+Engelse pagina, als `….fr`, `….es`, `….de` of `…/fr`, `…/es`, `…/de` (zie `is_vertaling` in `scripts/crawl.py`). Een deel toevoegen is één regel in `DELEN` in `scripts/crawl.py`, plus dezelfde naam in
 de lijst in de workflow, in de Edge Function `crawl-starten`, in de controle op
 `crawl_aanvragen.bron` en in `DEEL_INFO` in `docs/index.html`. De overige pagina's van de
-site (alles buiten deze vier paden) zijn geen keuze.
+site (alles buiten dit pad) is geen keuze.
 
 ## Spelfouten en namen
 
-De woordenlijst kent geen plaats- en organisatienamen. Op reisadviespagina's staan die
-overal, dus zonder scheiding verdrinken de echte fouten erin: de crawl over alle 226
-reisadviezen gaf 3.376 meldingen, waarvan er 2.949 een naam waren.
+De woordenlijst kent geen plaats- en organisatienamen. Op visumpagina's staan landen en plaatsen overal, dus zonder
+scheiding verdrinken de echte fouten erin: de eerste crawl van TypoTapir (12 oktober) gaf na het weglaten van de
+vertalingen 417 spelfouten en 9.924 namen.
 
 Daarom deelt de app elke melding in. **Een woord met een hoofdletter middenin een zin is
 een naam**; aan het zinsbegin zegt een hoofdletter niets, dus daar toetsen we gewoon door.
@@ -120,7 +116,7 @@ Boven de lijst bij **Spelfouten** staat een knop **Download als Excel**. Het bes
 bevat wat nu in het tabblad staat: met de filters die je hebt gezet (URL en woord), en zonder wat
 is goedgekeurd. Zonder filters is dat de hele lijst. De knop zegt hoeveel
 rijen erin komen; staat er een filter aan, dan eindigt de bestandsnaam op `-gefilterd`, bijvoorbeeld
-`spelfouten-visum-nederland-2026-10-02.xlsx`.
+`spelfouten-visa-the-netherlands-2026-10-13.xlsx`.
 
 De kolommen zijn Pagina (de URL), Zin, Woord, Suggestie en Opmerking. Suggestie en Opmerking
 blijven leeg: die vult de redacteur zelf in. In de Zin staat de spelfout vet. Sjabloonresten staan bovenaan. Bij **Namen** is geen
@@ -160,9 +156,9 @@ Geen installatie nodig; alleen Python 3.
 
 ```bash
 python3 scripts/crawl.py --bron demo --max-paginas 5     # fictieve pagina's, zonder netwerk
-python3 scripts/crawl.py --bron reisadvies --max-paginas 10   # ook: visum-nederland, caribisch-visum, ambassades
+python3 scripts/crawl.py --bron visa-the-netherlands --max-paginas 10
 python3 -m http.server --directory docs 8000             # scherm bekijken op localhost:8000
-python3 scripts/test.py                                  # 131 controles; --offline slaat het netwerk over
+python3 scripts/test.py                                  # 137 controles; --offline slaat het netwerk over
 ```
 
 Het scherm heeft Supabase nodig om iets te tonen; lokaal zie je zonder internet niets. Het resultaat van een lokale crawl in Supabase zetten kan met:
@@ -174,13 +170,14 @@ python3 scripts/crawl.py --bron demo --max-paginas 5 --uit resultaten.json
 python3 scripts/publiceer.py --in resultaten.json
 ```
 
-De workflow haalt per run de OpenTaal-lijst op (ruim 413.000 woorden) en vergelijkt de
-sha256 met [`data/opentaal.sha256`](data/opentaal.sha256). Wijkt die af, dan waarschuwt de
-run: je toetst dan aan een andere lijst dan de vorige keer.
+De workflow installeert per run het Debian-pakket `wbritish` (SCOWL, Brits Engels met -ise; 103.494 woorden)
+en vergelijkt de sha256 met [`data/woordenlijst.sha256`](data/woordenlijst.sha256). Wijkt die af, dan waarschuwt
+de run: je toetst dan aan een andere lijst dan de vorige keer. De run waarschuwt ook als *organise*, *colour*,
+*don't* of *London's* ontbreekt, of als *color* erin staat.
 
 Zonder `data/woordenlijst.txt` valt het script terug op `data/woordenlijst-demo.txt`. Dat is
 een testlijst van ruim honderd woorden, alleen bedoeld voor `demo/`. De echte lijst haalt de
-workflow per run op bij OpenTaal.
+workflow per run op (het pakket `wbritish`). De demopagina's en de testlijst zijn nog Nederlands.
 
 ## Toegang
 
@@ -228,7 +225,7 @@ altijd een harde bovengrens op het aantal pagina's.
 | `supabase/functions/naam-verplaatsen/` | Edge Function die een naam naar de spelfouten verplaatst of terugzet (de controle op het verzoek staat los, in `verplaatsen.ts`) |
 | `scripts/plaatsnamen.py` | Beoordeelt namen tegen GeoNames: bekend, lijkt op een bekende plaats, of geen oordeel |
 | `scripts/haal_goedgekeurd.py` | Haalt de in het scherm goedgekeurde woorden op, vlak voor de crawl |
-| `data/opentaal.sha256` | De versie van de woordenlijst waarop wij ons baseren |
+| `data/woordenlijst.sha256` | De sha256 van de woordenlijst (`wbritish`) waarop wij ons baseren |
 | `demo/` | Vijf fictieve pagina's met drie ingebouwde fouten, om op te testen |
 | `OVERDRACHT.md` | Stand van zaken, openstaande besluiten, beperkingen en beheer |
 | `.github/workflows/crawl.yml` | De knop die een crawl start |
@@ -269,7 +266,6 @@ op en vergelijkt er geen.
 Plaatsnamen worden beoordeeld met gegevens van [GeoNames](https://www.geonames.org), licentie
 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 
-De spelling wordt getoetst aan de
-[OpenTaal-woordenlijst](https://github.com/OpenTaal/opentaal-wordlist) van stichting
-OpenTaal, die het Keurmerk Spelling van de Nederlandse Taalunie draagt. Licentie: Revised
-BSD en/of CC BY 3.0.
+De spelling wordt getoetst aan [SCOWL](http://wordlist.aspell.net) (Spell Checker Oriented Word Lists), via het
+Debian-pakket `wbritish` (versie 2020.12.07-2). SCOWL staat onder een MIT-achtige, BSD-compatibele licentie; lees
+voor de exacte tekst het copyrightbestand van het pakket voordat je de lijst in deze repository meelevert.
