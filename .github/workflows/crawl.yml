@@ -9,7 +9,7 @@ on:
         description: "Welk deel van de site"
         type: choice
         default: visa-the-netherlands
-        options: [demo, visa-the-netherlands, caribbean-visa, embassies-consulates]
+        options: [demo, visa-the-netherlands, caribbean-visa]
       aanvraag_id:
         description: "Id van de aanvraag in Supabase (door het scherm ingevuld, voor de voortgangsbalk)"
         default: ""

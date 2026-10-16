@@ -170,8 +170,7 @@ def main():
     controle("een ander deel hoort er niet bij", not valt_onder(SITE + "/about-us", P))
     controle("diep onderliggende pagina's horen erbij",
              valt_onder(SITE + P + "/short-stay/tourism/apply", P))
-    controle("er is een deel met het gevraagde pad", DELEN == {"visa-the-netherlands": P, "caribbean-visa": "/caribbean-visa",
-                                "embassies-consulates": "/contact/embassies-consulates-general"}, str(DELEN))
+    controle("er is een deel met het gevraagde pad", DELEN == {"visa-the-netherlands": P, "caribbean-visa": "/caribbean-visa"}, str(DELEN))
     controle("een vertaling (.fr, .es, .de) is geen Engelse pagina",
              all(is_vertaling(SITE + P + "/waiting-time" + s) for s in (".fr", ".es", ".de")))
     controle("een vertaling als laatste deel van het pad (/fr, /es, /de) telt ook",

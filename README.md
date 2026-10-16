@@ -54,7 +54,6 @@ Je kiest een deel van de site; alles onder dat pad hoort erbij.
 |---|---|---|
 | Visa for the Netherlands | `/visa-the-netherlands` | 1.015 |
 | Caribbean visa | `/caribbean-visa` | 452 |
-| Embassies and consulates | `/contact/embassies-consulates-general` | 219 |
 
 De pagina's staan verspreid over de sitemaps van de site, dus de crawler leest ze allemaal en houdt over wat
 onder het pad valt. **Vertalingen worden overgeslagen**: de site zet Franse, Spaanse en Duitse versies naast de
