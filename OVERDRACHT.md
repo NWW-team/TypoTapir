@@ -105,14 +105,14 @@ De publieke Supabase-key (`sb_publishable_…`) staat bewust in `docs/index.html
 
 ### De delen van de site
 
-`DELEN` in `crawl.py` heeft drie delen (Caribbean visa sinds 13 oktober, Embassies and consulates sinds 16 oktober;
-migraties en Edge Function zijn toegepast). De limiet van één crawl per dag geldt voor alle delen samen, bewust:
+`DELEN` in `crawl.py` heeft twee delen. Caribbean visa is op 13 oktober toegevoegd; de migratie
+`20261013000000_deel_caribbean_visa.sql` en de Edge Function `crawl-starten` moeten nog met de hand worden
+toegepast (zie hieronder):
 
 | Deel | Pad | Pagina's |
 |---|---|---|
 | Visa for the Netherlands | `/visa-the-netherlands` | 1.015 (Engels, zonder vertalingen) |
 | Caribbean visa | `/caribbean-visa` | 452 (Engels, zonder vertalingen; 581 met) |
-| Embassies and consulates | `/contact/embassies-consulates-general` | 219 (geen vertalingen) |
 
 De sitemaps hebben 5.849 URL's. Het deel heeft er 1.398, waarvan 383 vertalingen. Overige bovenste paden
 (telling inclusief vertalingen), voor als er delen bij moeten komen:

@@ -36,7 +36,6 @@ USER_AGENT = f"TypoTapir/0.1 (+{PROJECT_URL})"
 DELEN = {
     "visa-the-netherlands": "/visa-the-netherlands",
     "caribbean-visa": "/caribbean-visa",
-    "embassies-consulates": "/contact/embassies-consulates-general",
 }
 SITEMAP_INDEX = f"{SITE}/sitemap.xml"
 
