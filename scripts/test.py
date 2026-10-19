@@ -20,7 +20,7 @@ from plaatsnamen import Plaatsnamen, afstand, samenvatting, tokens  # noqa: E402
 from voortgang import meld  # noqa: E402
 from crawl import (DELEN, SITE, alle_sitemap_urls, is_bekend, is_vertaling, urls_van_deel, valt_onder, verplaats_namen, lees_goedgekeurd,  # noqa: E402
                    maak_robots_controle, naar_patroon, soort_van, tekst_uit_main,
-                   zoek_fouten)
+                   zoek_fouten, ANDERSTALIG)
 
 WORTEL = Path(__file__).resolve().parent.parent
 uitkomsten = []
@@ -56,8 +56,12 @@ def main():
     offline = "--offline" in sys.argv
     tijdelijk = Path(tempfile.mkdtemp())
 
+    # Gewone woorden zijn in de echte woordenlijst bekend. Zonder ze is elk woord van een
+    # testzin onbekend en telt de zin als anderstalig citaat (zie "Anderstalige citaten").
+    gewoon = {"of", "een", "laat", "weten", "wijs", "de", "erop", "stuur", "het", "naar"}
+
     def woorden_in(zin):
-        return [b["woord"] for b in zoek_fouten(zin, set())]
+        return [b["woord"] for b in zoek_fouten(zin, set(gewoon))]
 
     def woorden_in_met(zin, toegestaan):
         return [b["woord"] for b in zoek_fouten(zin, toegestaan)]
@@ -171,7 +175,8 @@ def main():
     controle("diep onderliggende pagina's horen erbij",
              valt_onder(SITE + P + "/short-stay/tourism/apply", P))
     controle("er is een deel met het gevraagde pad", DELEN == {"visa-the-netherlands": P, "caribbean-visa": "/caribbean-visa",
-                                "making-appointment": "/making-appointment"}, str(DELEN))
+                                "making-appointment": "/making-appointment",
+                                "passport-id-card": "/passport-id-card"}, str(DELEN))
     controle("een vertaling (.fr, .es, .de) is geen Engelse pagina",
              all(is_vertaling(SITE + P + "/waiting-time" + s) for s in (".fr", ".es", ".de")))
     controle("een vertaling als laatste deel van het pad (/fr, /es, /de) telt ook",
@@ -387,7 +392,7 @@ def main():
 
     print("\nEngelse tekst")
     engels = {"don't", "forget", "visa", "you", "may", "need", "a", "london", "countries",
-              "well-known", "receive", "it's"}
+              "well-known", "receive", "it's", "rules", "fine", "to", "countries'", "london's"}
     engels |= {w.lower() for w in engels}
     gemeld = [b["woord"] for b in zoek_fouten(
         "Don\u2019t forget: you may need a visa. London\u2019s visa rules; countries\u2019 visa; "
@@ -470,8 +475,38 @@ def main():
     controle("gekrulde apostrof telt als rechte", "natuurrisico's" not in over, f"over: {over}")
     controle("goedgekeurd woord dekt het meervoud", "radiotaxi's" not in over, f"over: {over}")
 
+    print("\nAnderstalige citaten")
+    en = {"you", "can", "do", "this", "by", "providing", "birth", "certificate", "the", "documents",
+          "apply", "for", "a", "passport", "and", "in", "case", "of", "your", "child", "with", "at", "office"}
+
+    def engels_in(zin):
+        return [b["woord"] for b in zoek_fouten(zin, set(en))]
+    controle("Griekse woorden zijn nooit een Engelse spelfout",
+             engels_in("You can do this by providing the birth certificate (\u03bb\u03b7\u03be\u03b9\u03b1\u03c1\u03c7\u03b9\u03ba\u03ae \u03c0\u03c1\u03ac\u03be\u03b7).") == [])
+    controle("een Italiaans citaat tussen haakjes valt weg",
+             engels_in("You can do this by providing the birth certificate (carta d'identit\u00e0, attestazione di soggiorno permanente).") == [])
+    controle("een Zweeds citaat valt weg",
+             engels_in("Apply for a passport with personbevis och folkbokf\u00f6ringsuppgifter in case of a child.") == [])
+    controle("één typfout in een Engelse zin blijft gemeld",
+             engels_in("You can do this by providing the documnts for your passport.") == ["documnts"])
+    controle("twee typfouten dicht bij elkaar blijven gemeld",
+             engels_in("You can apply by providing the documnts and pasport for your child.") == ["documnts", "pasport"])
+    controle("drie typfouten ver uit elkaar blijven gemeld",
+             engels_in("You can do this by providing the documnts for a passport and in case of your chld at the pasport office.")
+             == ["documnts", "chld", "pasport"])
+    en |= {"legalised", "centre", "firsts", "first"}
+    controle("Amerikaanse spelling naast een citaat blijft gemeld",
+             engels_in("Apply for a passport legalized carta d'identit\u00e0 attestazione soggiorno.") == ["legalized"])
+    controle("een typfout naast een citaat blijft gemeld",
+             engels_in("Apply for a passport firts carta d'identit\u00e0 attestazione soggiorno.") == ["firts"])
+    controle("namen met een hoofdletter vallen niet onder de regel",
+             [b["soort"] for b in zoek_fouten("You can apply for a passport in Aalten Exeter Phuket.", set(en))] == ["naam"] * 3)
+    ANDERSTALIG["woorden"] = 0
+    zoek_fouten("Apply for a passport with personbevis och folkbokf\u00f6ringsuppgifter in case of a child.", set(en))
+    controle("de overgeslagen woorden worden geteld", ANDERSTALIG["woorden"] == 3, str(ANDERSTALIG))
+
     print("\nHuisstijl met een plus")
-    huis = {"lhbtiq+", "vriendelijke"}
+    huis = {"lhbtiq+", "vriendelijke", "een", "persoon"}
     controle("lhbtiq+ wordt goedgekeurd", "lhbtiq+" not in woorden_in_met("Een lhbtiq+ persoon.", huis))
     controle("lhbtiq zonder plus wordt gemeld", "lhbtiq" in woorden_in_met("Een lhbtiq persoon.", huis))
     controle("samenstelling over beide lijsten",
@@ -552,13 +587,13 @@ def main():
 
     print("\nWoorden uit een zin halen")
     def woorden_in(zin):
-        return [b["woord"] for b in zoek_fouten(zin, set())]
+        return [b["woord"] for b in zoek_fouten(zin, set(gewoon))]
 
     def woorden_in_met(zin, toegestaan):
         return [b["woord"] for b in zoek_fouten(zin, toegestaan)]
     controle("weglatingsstreepje", "Nood" in woorden_in("Nood- of crisissituatie."))
     controle("schuine streep splitst",
-             woorden_in("Laat familie/vrienden weten.")[1:3] == ["familie", "vrienden"])
+             woorden_in("Laat familie/vrienden weten.") == ["familie", "vrienden"])
     controle("haakje middenin splitst", "chauffeur" in woorden_in("Wijs de (bus)chauffeur erop."))
     controle("koppelteken blijft heel", "e-mail" in woorden_in("Stuur een e-mail."))
     controle("e-mailadres wordt overgeslagen",
