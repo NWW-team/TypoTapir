@@ -32,7 +32,7 @@ met nakijken:
 | Delen van de site | vier tabs: `visa-the-netherlands` (1.015 pagina's), `caribbean-visa` (452), `making-appointment` (219) en `passport-id-card` (690); alles onder het pad, zonder vertalingen |
 | Woordenlijst | Debian-pakket `wbritish` 2020.12.07-2 (SCOWL), 103.494 woorden; sha256 vastgelegd in `data/woordenlijst.sha256` |
 | Controles | 149, `python3 scripts/test.py --offline` |
-| Crawls | 4: Visa for the Netherlands (12 oktober), Caribbean visa (13 oktober), Making an appointment (16 oktober) en Passport or ID card (19 oktober; die is nog zonder de filter voor anderstalige citaten gedaan, zie "Anderstalige citaten"). Alleen de eerste is hieronder beschreven |
+| Crawls | 3 in de database: Visa for the Netherlands (12 oktober), Caribbean visa (13 oktober) en Making an appointment (16 oktober). De paspoortcrawl van 19 oktober is verwijderd (zie "De delen van de site"). Alleen de eerste is hieronder beschreven |
 | Goedgekeurd | 84 actieve goedgekeurde woorden en namen (20 oktober; op 13 oktober waren het 77) en 3 namen als spelfout aangewezen; de redactie is begonnen |
 
 **De eerste crawl (12 oktober, 15.08 uur Nederlandse tijd).** De run duurde 17 minuten (de crawl zelf 15,5)
@@ -113,8 +113,10 @@ in `crawl_aanvragen` staat alleen op de datum, niet op het deel.
 **Passport or ID card.** Dit deel is op 19 oktober toegevoegd, op 20 oktober teruggezet omdat de eerste crawl vol
 anderstalige woorden stond (1.626 spelfouten), en daarna opnieuw toegevoegd met een filter voor anderstalige citaten
 (zie "Anderstalige citaten"). Wat bij de terugzetting is gebeurd en nog geldt:
-- De crawl van 19 oktober (3.421 bevindingen) staat nog in de database en is wat de tab toont, tot er een nieuwe crawl is.
-  Die staat dus nog **zonder** de filter. Start een nieuwe crawl (één per dag) om de schone lijst te krijgen.
+- De crawl van 19 oktober (3.421 bevindingen, zonder de filter) is op verzoek **verwijderd** (`crawls` en, via
+  `ON DELETE CASCADE`, de bevindingen). De bijbehorende aanvraag (`crawl_aanvragen` id 4) staat op `gestopt` in plaats
+  van verwijderd, zodat de geschiedenis blijft en de limiet van één crawl per dag die dag vrij was voor een nieuwe crawl.
+  Het deel heeft dus nog geen crawl: de tab is leeg tot de eerste crawl met de filter.
 - De 88 woorden die de redactie in de paspoort-tab had goedgekeurd (id 86 en 88 tot en met 174 in `goedgekeurd`, 19 oktober)
   zijn ingetrokken, niet verwijderd. `apostille` (id 87) is blijven staan: het komt ook in andere delen voor. De filter
   haalt het anderstalige deel eruit, dus die woorden hoeven niet opnieuw te worden goedgekeurd.
