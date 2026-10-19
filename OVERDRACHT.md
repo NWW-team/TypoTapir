@@ -29,10 +29,10 @@ met nakijken:
 | Repository | `NWW-team/TypoTapir`, branch `main` (squash-merges via pull requests; de laatste is 13) |
 | Supabase | project **TypoTapir**, `zasfgsgmbapnhfsnqsrp`, regio eu-west-1, URL `https://zasfgsgmbapnhfsnqsrp.supabase.co` |
 | Scherm | GitHub Pages, branch `main`, map `/docs` |
-| Delen van de site | drie tabs: `visa-the-netherlands` (1.015 pagina's), `caribbean-visa` (452) en `making-appointment` (219); alles onder het pad, zonder vertalingen. Alle drie zijn al een keer gecrawld. `passport-id-card` is teruggezet (zie "De delen van de site") |
+| Delen van de site | vier tabs: `visa-the-netherlands` (1.015 pagina's), `caribbean-visa` (452), `making-appointment` (219) en `passport-id-card` (690); alles onder het pad, zonder vertalingen |
 | Woordenlijst | Debian-pakket `wbritish` 2020.12.07-2 (SCOWL), 103.494 woorden; sha256 vastgelegd in `data/woordenlijst.sha256` |
-| Controles | 139, `python3 scripts/test.py --offline` |
-| Crawls | 4: Visa for the Netherlands (12 oktober), Caribbean visa (13 oktober), Making an appointment (16 oktober) en Passport or ID card (19 oktober, teruggezet). Alleen de eerste is hieronder beschreven |
+| Controles | 149, `python3 scripts/test.py --offline` |
+| Crawls | 4: Visa for the Netherlands (12 oktober), Caribbean visa (13 oktober), Making an appointment (16 oktober) en Passport or ID card (19 oktober; die is nog zonder de filter voor anderstalige citaten gedaan, zie "Anderstalige citaten"). Alleen de eerste is hieronder beschreven |
 | Goedgekeurd | 84 actieve goedgekeurde woorden en namen (20 oktober; op 13 oktober waren het 77) en 3 namen als spelfout aangewezen; de redactie is begonnen |
 
 **De eerste crawl (12 oktober, 15.08 uur Nederlandse tijd).** De run duurde 17 minuten (de crawl zelf 15,5)
@@ -73,12 +73,12 @@ Precies als bij het origineel:
 
 | Onderdeel | Waar | Wat |
 |---|---|---|
-| Scherm | `docs/index.html`, `docs/xlsx.js`, `docs/icoon*.png` | Eén bestand, geen buildstap. Tabs per deel (nu drie), crawlknop in de tab, Excel bij Spelfouten (Pagina, Zin met vet woord, Woord, Suggestie, Opmerking) |
+| Scherm | `docs/index.html`, `docs/xlsx.js`, `docs/icoon*.png` | Eén bestand, geen buildstap. Tabs per deel (nu vier), crawlknop in de tab, Excel bij Spelfouten (Pagina, Zin met vet woord, Woord, Suggestie, Opmerking) |
 | Crawler en toets | `scripts/crawl.py` | `SITE`, `DELEN`, `is_vertaling`, de toets zelf. Alleen standaardbibliotheek |
 | Overige scripts | `scripts/plaatsnamen.py`, `haal_goedgekeurd.py`, `voortgang.py`, `publiceer.py` | Gelijk aan het origineel |
-| Workflow | `.github/workflows/crawl.yml` | Invoer: `bron` (`demo` en de drie delen) en `aanvraag_id`. Er is geen `opentaal_ref` meer |
+| Workflow | `.github/workflows/crawl.yml` | Invoer: `bron` (`demo` en de vier delen) en `aanvraag_id`. Er is geen `opentaal_ref` meer |
 | Database | `supabase/migrations/` | Dertien migraties, **met de hand toegepast** (via de MCP, zie hieronder) |
-| Edge Functions | `supabase/functions/` | Vier, `verify_jwt = false`, **met de hand gedeployd** (12 oktober, versie 1; `crawl-starten` is bij elk nieuw deel opnieuw gedeployd, nu versie 7 op 20 oktober) |
+| Edge Functions | `supabase/functions/` | Vier, `verify_jwt = false`, **met de hand gedeployd** (12 oktober, versie 1; `crawl-starten` is bij elk nieuw deel opnieuw gedeployd, nu versie 8 op 20 oktober) |
 
 ### Supabase
 
@@ -87,7 +87,7 @@ Tabellen, rechten en functies zijn die van het origineel (zie daar voor de besch
   `bevindingen` met de hand aangemaakt en stond dat in geen enkele migratie, waardoor de reeks op een leeg
   project niet werkt. De Nederlandse woordenlijst-import (`…050000_uitzonderingen_importeren.sql`) is hier
   weggelaten.
-- `crawl_aanvragen.bron` mag de drie delen zijn, plus `passport-id-card` (zie "De delen van de site") (migratie `…070000`, daarna bij elk nieuw deel opgerekt: `20261013000000`, `20261016000000`, `20261019000000`).
+- `crawl_aanvragen.bron` mag de vier delen zijn (migratie `…070000`, daarna bij elk nieuw deel opgerekt: `20261013000000`, `20261016000000`, `20261019000000`).
 - **Hoe het is toegepast**, voor wie de versies in de database vergelijkt: de migraties staan in
   `supabase_migrations` onder andere namen en tijdstippen (alle 12 oktober), en zijn deels samengevoegd of
   gesplitst. `open_lezen` is zonder het blok dat bestaande policies verwijdert toegepast (er waren er geen).
@@ -105,39 +105,37 @@ De publieke Supabase-key (`sb_publishable_…`) staat bewust in `docs/index.html
 
 ### De delen van de site
 
-`DELEN` in `crawl.py` heeft drie delen (Caribbean visa sinds 13 oktober, Making an appointment sinds 16 oktober;
-migraties en Edge Function zijn toegepast). **De limiet van één crawl per dag geldt voor alle delen samen, bewust**
-(besluit van de opdrachtgever, om te vaak crawlen te voorkomen): de unieke index in `crawl_aanvragen` staat alleen op
-de datum, niet op het deel.
+`DELEN` in `crawl.py` heeft vier delen (Caribbean visa sinds 13 oktober, Making an appointment sinds 16 oktober,
+Passport or ID card sinds 19 oktober; migraties en Edge Function zijn toegepast). **De limiet van één crawl per dag
+geldt voor alle delen samen, bewust** (besluit van de opdrachtgever, om te vaak crawlen te voorkomen): de unieke index
+in `crawl_aanvragen` staat alleen op de datum, niet op het deel.
 
-**Passport or ID card (`/passport-id-card`, 690 Engelse pagina's) is op 19 oktober toegevoegd en daarna weer
-teruggezet**, omdat de tab nog niet goed genoeg werkt. Wat er nog van over is, en bewust is blijven staan:
-- De crawl van 19 oktober staat nog in de database (3.421 bevindingen, `crawls.bron = 'passport-id-card'`). Het scherm
-  toont hem niet, omdat het deel niet meer in `DEEL_INFO` staat.
-- De 88 woorden die de redactie in de paspoort-tab had goedgekeurd (id 86 en 88 tot en met 174 in `goedgekeurd`, 19 oktober) zijn
-  ingetrokken, niet verwijderd. `apostille` (id 87) is blijven staan: het komt ook in andere delen voor.
-- De migratie `20261019000000_deel_passport_id_card.sql` is toegepast en laat `passport-id-card` nog toe in
-  `crawl_aanvragen.bron`. Een strengere controle zou de bestaande crawl-aanvraag afwijzen.
-- Uit de code zijn weg: de regel in `DELEN`, de workflow-optie, `BRONNEN` in `crawl-starten` (nu versie 7) en
-  `DEEL_INFO`. Het deel kan dus niet meer worden gestart.
-
-Wil je het deel terugzetten, draai dan de revert (pull request 13) terug.
+**Passport or ID card.** Dit deel is op 19 oktober toegevoegd, op 20 oktober teruggezet omdat de eerste crawl vol
+anderstalige woorden stond (1.626 spelfouten), en daarna opnieuw toegevoegd met een filter voor anderstalige citaten
+(zie "Anderstalige citaten"). Wat bij de terugzetting is gebeurd en nog geldt:
+- De crawl van 19 oktober (3.421 bevindingen) staat nog in de database en is wat de tab toont, tot er een nieuwe crawl is.
+  Die staat dus nog **zonder** de filter. Start een nieuwe crawl (één per dag) om de schone lijst te krijgen.
+- De 88 woorden die de redactie in de paspoort-tab had goedgekeurd (id 86 en 88 tot en met 174 in `goedgekeurd`, 19 oktober)
+  zijn ingetrokken, niet verwijderd. `apostille` (id 87) is blijven staan: het komt ook in andere delen voor. De filter
+  haalt het anderstalige deel eruit, dus die woorden hoeven niet opnieuw te worden goedgekeurd.
+- De migratie `20261019000000_deel_passport_id_card.sql` is toegepast; de databasecontrole liet het deel de hele tijd toe.
 
 | Deel | Pad | Pagina's |
 |---|---|---|
 | Visa for the Netherlands | `/visa-the-netherlands` | 1.015 (Engels, zonder vertalingen) |
 | Caribbean visa | `/caribbean-visa` | 452 (Engels, zonder vertalingen; 581 met) |
 | Making an appointment | `/making-appointment` | 219 (geen vertalingen) |
+| Passport or ID card | `/passport-id-card` | 690 (Engels, zonder vertalingen; 885 met) |
 
 De sitemaps hebben ±5.850 URL's. Visa for the Netherlands heeft er 1.398, waarvan 383 vertalingen. Overige bovenste paden
 (telling inclusief vertalingen), voor als er delen bij moeten komen:
 
 | Pad | URL's | Pad | URL's |
 |---|---|---|---|
-| `/passport-id-card` | 878 | `/consular-fees` | 267 |
-| `/declaration` | 868 | `/contact` | 222 |
-| `/legalisation` | 310 | `/digid-abroad` | 136 |
-| `/civic-integration-exam-abroad` | 271 | `/marry` (84), `/dutch-nationality` (57) | |
+| `/declaration` | 868 | `/consular-fees` | 267 |
+| `/legalisation` | 310 | `/contact` | 222 |
+| `/civic-integration-exam-abroad` | 271 | `/digid-abroad` | 136 |
+| `/marry` | 84 | `/dutch-nationality` | 57 |
 
 Een deel toevoegen kost (in deze volgorde): een regel in `DELEN`, de naam in `options` van de workflow, een migratie
 voor de controle op `crawl_aanvragen.bron`, `BRONNEN` in `crawl-starten` én een regel in `DEEL_INFO` in
@@ -148,8 +146,31 @@ workflow niet kent.
 `/contact/embassies-consulates-general` stonden alleen de 218 landpagina's, terwijl er per land nog pagina's als
 `/algeria/embassy-algiers` bestaan die alleen via links bereikbaar zijn. De crawler volgt geen links, dus die
 pagina's waren niet gecrawld. Dat deel is daarom (op verzoek) **niet toegevoegd**. Wil je het alsnog, dan moet de
-crawler links kunnen volgen binnen een deel (nog niet gebouwd). Voor de drie huidige delen is een steekproef van
+crawler links kunnen volgen binnen een deel (nog niet gebouwd). Voor de vier huidige delen is een steekproef van
 25 tot 30 pagina's per deel gedaan zonder links buiten de sitemap te vinden; een volledige controle is niet gedaan.
+
+### Anderstalige citaten
+
+Engelse pagina's citeren officiële documentnamen in de taal van het land, vaak tussen haakjes (Grieks, Italiaans,
+Zweeds, Noors, Frans, Turks, Tsjechisch). De Britse woordenlijst kent die niet, dus de eerste paspoortcrawl gaf 1.626
+spelfouten, grotendeels citaten. `zoek_fouten()` in `crawl.py` laat zulke woorden nu weg, met twee regels:
+1. **Ander schrift.** Een woord met letters buiten het Latijnse schrift (Grieks, Cyrillisch, Arabisch, ...) is nooit een
+   Engelse spelfout (`is_niet_latijns`). Accenten tellen als Latijns.
+2. **Een tros.** Staan er drie onbekende woorden binnen vijf opeenvolgende woorden (`TROS_AANTAL`, `TROS_VENSTER`), dan is
+   het een citaat en vallen die woorden weg (`anderstalige_posities`). Een echte typfout staat zelden naast twee andere.
+   Namen met een hoofdletter vallen niet onder deze regel; die staan apart bij Namen.
+
+**Uitzondering:** een woord dat op een Engels woord lijkt blijft gemeld, ook in een tros (`lijkt_op_engels`): één letter
+verschil met een bekend woord (`firts`, `abirth`) of een Amerikaanse variant (`legalized`, `center`, `travelers`). Dat
+zijn typfouten en spellingvarianten, geen citaten.
+
+De crawl meldt aan het eind hoeveel woorden zijn overgeslagen. De woorden worden **niet bewaard**: wat wegvalt is
+niet terug te zien, ook niet bij Namen. Gemeten op 7 zwaar getroffen paspoortpagina's (reconstructie uit de opgeslagen
+bevindingen, niet met de echte woordenlijst): 198 → 89 spelfouten, met alle echte fouten nog aanwezig. Wat blijft:
+losse anderstalige woorden zonder buren (veel Portugees en Frans), en citaten die precies één letter van een Engels woord
+afliggen (`permanente`). Zie je dat in een volgende crawl, dan is de tros-regel bij te stellen. Een bijwerking: een
+tros van echte typfouten dicht bij elkaar valt ook weg. In de bestaande crawls van de andere delen raakt de regel
+vrijwel alleen Turks en Frans.
 
 ### Vertalingen
 
@@ -261,7 +282,7 @@ In volgorde van belang.
 |---|---|---|
 | Site | nederlandwereldwijd.nl | netherlandsworldwide.nl |
 | Taal | Nederlands (OpenTaal) | Brits Engels, -ise (SCOWL, `wbritish`) |
-| Delen | vier | drie (`visa-the-netherlands`, `caribbean-visa`, `making-appointment`) |
+| Delen | vier | vier (`visa-the-netherlands`, `caribbean-visa`, `making-appointment`, `passport-id-card`) |
 | Vertalingen | niet van toepassing | `.fr`, `.es`, `.de`, `/fr`, `/es`, `/de` overgeslagen |
 | Woordenlijst ophalen | download van OpenTaal, sha256 in `data/opentaal.sha256` | `apt-get install wbritish`, sha256 in `data/woordenlijst.sha256` |
 | Supabase | `riwznqurcluudvyrkwxe` (eu-west-2) | `zasfgsgmbapnhfsnqsrp` (eu-west-1) |

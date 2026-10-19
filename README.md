@@ -55,6 +55,7 @@ Je kiest een deel van de site; alles onder dat pad hoort erbij.
 | Visa for the Netherlands | `/visa-the-netherlands` | 1.015 |
 | Caribbean visa | `/caribbean-visa` | 452 |
 | Making an appointment | `/making-appointment` | 219 |
+| Passport or ID card | `/passport-id-card` | 690 |
 
 De pagina's staan verspreid over de sitemaps van de site, dus de crawler leest ze allemaal en houdt over wat
 onder het pad valt. **Vertalingen worden overgeslagen**: de site zet Franse, Spaanse en Duitse versies naast de
@@ -80,6 +81,14 @@ en een link naar het reisadvies waar die zin staat — en als de naam op meer pa
 voorkomt, staat erbij op hoeveel. Zo blijft een verkeerd gespelde plaatsnaam op te zoeken. De indeling
 staat per bevinding in de kolom `soort`, dus wie de regel anders wil (hij staat in
 `soort_van` in `scripts/crawl.py`) kan het scherm omgooien zonder opnieuw te crawlen.
+
+### Anderstalige citaten
+
+Engelse pagina's citeren soms documentnamen in een andere taal ("birth certificate (carta d'identità, attestazione di
+soggiorno permanente)"). Die woorden telt de app niet als spelfout: woorden in een ander schrift (Grieks, Arabisch, ...)
+vallen weg, en ook een tros van drie onbekende woorden binnen vijf opeenvolgende woorden. Een woord dat op een Engels woord
+lijkt blijft wel gemeld (`firts`, `legalized`). Wat wegvalt wordt niet bewaard; het logboek van de crawl zegt hoeveel
+woorden zijn overgeslagen. De regel staat in `zoek_fouten` in `scripts/crawl.py`.
 
 ### Plaatsnamen nakijken
 
@@ -160,7 +169,7 @@ Geen installatie nodig; alleen Python 3.
 python3 scripts/crawl.py --bron demo --max-paginas 5     # fictieve pagina's, zonder netwerk
 python3 scripts/crawl.py --bron visa-the-netherlands --max-paginas 10
 python3 -m http.server --directory docs 8000             # scherm bekijken op localhost:8000
-python3 scripts/test.py                                  # 139 controles; --offline slaat het netwerk over
+python3 scripts/test.py                                  # 149 controles; --offline slaat het netwerk over
 ```
 
 Het scherm heeft Supabase nodig om iets te tonen; lokaal zie je zonder internet niets. Het resultaat van een lokale crawl in Supabase zetten kan met:

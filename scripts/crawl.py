@@ -37,6 +37,7 @@ DELEN = {
     "visa-the-netherlands": "/visa-the-netherlands",
     "caribbean-visa": "/caribbean-visa",
     "making-appointment": "/making-appointment",
+    "passport-id-card": "/passport-id-card",
 }
 SITEMAP_INDEX = f"{SITE}/sitemap.xml"
 
@@ -296,6 +297,62 @@ def soort_van(woord, zin):
     return "spelfout"
 
 
+# Hoeveel woorden we als anderstalig hebben overgeslagen; de crawl meldt dat aan het eind.
+ANDERSTALIG = {"woorden": 0}
+# Een tros: minstens DRIE onbekende woorden binnen VIJF opeenvolgende woorden.
+TROS_AANTAL, TROS_VENSTER = 3, 5
+
+
+def is_niet_latijns(woord):
+    """Of het woord letters uit een ander schrift bevat (Grieks, Cyrillisch, Arabisch, ...).
+
+    Alles tot en met Latin Extended-B (U+024F) telt als Latijn, dus ook accenten.
+    """
+    return any(teken.isalpha() and ord(teken) > 0x024F for teken in woord)
+
+
+def anderstalige_posities(posities):
+    """De posities (in een zin) die in een tros onbekende woorden zitten.
+
+    Een woord hoort bij een tros als er een venster van TROS_VENSTER opeenvolgende woorden
+    bestaat dat het woord bevat en minstens TROS_AANTAL onbekende woorden telt.
+    """
+    posities = sorted(posities)
+    tros = set()
+    for beginpositie in posities:
+        in_venster = [p for p in posities if beginpositie <= p < beginpositie + TROS_VENSTER]
+        if len(in_venster) >= TROS_AANTAL:
+            tros.update(in_venster)
+    return tros
+
+
+LETTERS = "abcdefghijklmnopqrstuvwxyz"
+
+
+def lijkt_op_engels(woord, woorden):
+    """Of het onbekende woord op een bekend Engels woord lijkt.
+
+    Dat is het geval bij een typfout (één letter verschil: "firts", "abirth") en bij een
+    Amerikaanse spelling ("legalized", "center"). Zulke woorden horen bij de Engelse tekst
+    en niet bij een citaat in een andere taal, ook niet als ze ernaast staan.
+    """
+    laag = woord.lower()
+    varianten = {laag.replace("z", "s"),
+                 re.sub(r"(\w)or(s?)$", r"\1our\2", laag),
+                 re.sub(r"er(s?)$", r"re\1", laag)}
+    if any(v != laag and v in woorden for v in varianten):
+        return True
+    if len(laag) < 5:
+        return False
+    delen = [(laag[:i], laag[i:]) for i in range(len(laag) + 1)]
+    kandidaten = {a + b[1:] for a, b in delen if b}                      # een letter te veel
+    kandidaten |= {a + b[1] + b[0] + b[2:] for a, b in delen if len(b) > 1}  # omgewisseld
+    kandidaten |= {a + c + b[1:] for a, b in delen if b for c in LETTERS}     # andere letter
+    kandidaten |= {a + c + b for a, b in delen for c in LETTERS}              # een letter te weinig
+    kandidaten.discard(laag)
+    return any(k in woorden for k in kandidaten)
+
+
 def zoek_fouten(tekst, toegestaan):
     """Geeft per onbekend woord een bevinding met de zin eromheen.
 
@@ -320,6 +377,8 @@ def zoek_fouten(tekst, toegestaan):
         # opdelen. Anders meldt de app "de&nbsp;grens" nog een keer naast het
         # "&nbsp;" dat er de oorzaak van is. De zin zelf blijft heel: die gaat
         # ongewijzigd als context mee.
+        kandidaten = []   # (positie, woord, soort) van wat onbekend is
+        positie = 0       # telt alle woorden van de zin, ook de bekende
         for ruw in SPLITSERS.split(SJABLOONRESTEN.sub(" ", zin)):
             woord = ruw.translate(ONZICHTBAAR).replace("’", "'").strip(LEESTEKENS)
             if not woord or not any(teken.isalpha() for teken in woord):
@@ -328,13 +387,27 @@ def zoek_fouten(tekst, toegestaan):
                 continue  # versienummers, jaartallen, codes
             if "@" in woord:
                 continue  # e-mailadressen
+            positie += 1
             if is_bekend(woord, toegestaan):
                 continue
+            if is_niet_latijns(woord):
+                ANDERSTALIG["woorden"] += 1
+                continue  # Grieks, Cyrillisch, Arabisch: nooit een Engelse spelfout
             sleutel = (woord, zin)
             if sleutel in gezien:
                 continue
             gezien.add(sleutel)
-            bevindingen.append({"woord": woord, "soort": soort_van(woord, zin),
+            kandidaten.append((positie, woord, soort_van(woord, zin)))
+        # Een citaat in een andere taal ("birth certificate (carta d'identità, attestazione
+        # di soggiorno permanente)") geeft een tros onbekende woorden achter elkaar.
+        # Een echte typfout staat zelden naast twee andere. Namen met een hoofdletter
+        # laten we buiten deze regel: die staan apart in het tabblad Namen.
+        tros = anderstalige_posities([p for p, _, soort in kandidaten if soort == "spelfout"])
+        for pos, woord, soort in kandidaten:
+            if pos in tros and not lijkt_op_engels(woord, toegestaan):
+                ANDERSTALIG["woorden"] += 1
+                continue
+            bevindingen.append({"woord": woord, "soort": soort,
                                 "context": kort(zin)})
     return bevindingen
 
@@ -494,6 +567,8 @@ def main():
     uit.parent.mkdir(parents=True, exist_ok=True)
     uit.write_text(json.dumps(resultaat, ensure_ascii=False, indent=2) + "\n",
                    encoding="utf-8")
+    print(f"{ANDERSTALIG['woorden']} woorden overgeslagen omdat ze bij een anderstalig citaat horen "
+          f"(ander schrift, of een tros van {TROS_AANTAL} onbekende woorden binnen {TROS_VENSTER}).")
     print(f"\n{aantal_paginas} pagina's bekeken, {len(bevindingen)} bevindingen "
           f"({resultaat['aantal_spelfouten']} spelfouten, "
           f"{resultaat['aantal_namen']} namen) -> {uit}")
