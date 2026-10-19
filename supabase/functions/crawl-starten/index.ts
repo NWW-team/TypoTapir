@@ -10,7 +10,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const REPO = "NWW-team/TypoTapir";
 const WORKFLOW = "crawl.yml";
-const BRONNEN = ["visa-the-netherlands", "caribbean-visa", "making-appointment"];
+const BRONNEN = ["visa-the-netherlands", "caribbean-visa", "making-appointment", "passport-id-card"];
 const MAX_PAGINAS = 5000;
 const KOP = {
   "Access-Control-Allow-Origin": "*",
