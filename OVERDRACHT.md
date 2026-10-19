@@ -118,7 +118,9 @@ anderstalige woorden stond (1.626 spelfouten), en daarna opnieuw toegevoegd met 
   van verwijderd, zodat de geschiedenis blijft en de limiet van één crawl per dag die dag vrij was voor een nieuwe crawl.
   De nieuwe crawl is daarna gedaan (690 pagina's, 1.402 spelfouten, 1.790 namen). Wat erin zat: vier woorden uit het
   menu of sjabloon (`filtertool` 424, `iCloud` 211, `advisably` 211, `laissez-passers` 210; samen 1.056 van de 1.402) en
-  40 webadressen, vooral fotowinkels. De webadressen zijn daarna met een nieuwe regel uitgesloten (zie "Webadressen");
+  40 webadressen, vooral fotowinkels. De webadressen zijn daarna met een nieuwe regel uitgesloten (zie "Webadressen") en
+  **met de hand uit deze ene crawl verwijderd**: 50 rijen (46 spelfouten en 4 namen: ook `https`, `Suomi.fi`,
+  `Government.nl` en `Rijksoverheid.nl`), precies wat de regel overslaat. Daarna: 1.356 spelfouten en 1.786 namen;
   de vier woorden moet de redactie goedkeuren. `filtertool` was bij het terugzetten van het deel ingetrokken (id 86).
 - De 88 woorden die de redactie in de paspoort-tab had goedgekeurd (id 86 en 88 tot en met 174 in `goedgekeurd`, 19 oktober)
   zijn ingetrokken, niet verwijderd. `apostille` (id 87) is blijven staan: het komt ook in andere delen voor. De filter
