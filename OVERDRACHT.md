@@ -31,8 +31,8 @@ met nakijken:
 | Scherm | GitHub Pages, branch `main`, map `/docs` |
 | Delen van de site | vier tabs: `visa-the-netherlands` (1.015 pagina's), `caribbean-visa` (452), `making-appointment` (219) en `passport-id-card` (690); alles onder het pad, zonder vertalingen |
 | Woordenlijst | Debian-pakket `wbritish` 2020.12.07-2 (SCOWL), 103.494 woorden; sha256 vastgelegd in `data/woordenlijst.sha256` |
-| Controles | 149, `python3 scripts/test.py --offline` |
-| Crawls | 3 in de database: Visa for the Netherlands (12 oktober), Caribbean visa (13 oktober) en Making an appointment (16 oktober). De paspoortcrawl van 19 oktober is verwijderd (zie "De delen van de site"). Alleen de eerste is hieronder beschreven |
+| Controles | 153, `python3 scripts/test.py --offline` |
+| Crawls | 4: Visa for the Netherlands (12 oktober), Caribbean visa (13 oktober), Making an appointment (16 oktober) en Passport or ID card (19 oktober, de tweede keer, met de filter voor anderstalige citaten). Alleen de eerste is hieronder beschreven |
 | Goedgekeurd | 84 actieve goedgekeurde woorden en namen (20 oktober; op 13 oktober waren het 77) en 3 namen als spelfout aangewezen; de redactie is begonnen |
 
 **De eerste crawl (12 oktober, 15.08 uur Nederlandse tijd).** De run duurde 17 minuten (de crawl zelf 15,5)
@@ -116,7 +116,10 @@ anderstalige woorden stond (1.626 spelfouten), en daarna opnieuw toegevoegd met 
 - De crawl van 19 oktober (3.421 bevindingen, zonder de filter) is op verzoek **verwijderd** (`crawls` en, via
   `ON DELETE CASCADE`, de bevindingen). De bijbehorende aanvraag (`crawl_aanvragen` id 4) staat op `gestopt` in plaats
   van verwijderd, zodat de geschiedenis blijft en de limiet van één crawl per dag die dag vrij was voor een nieuwe crawl.
-  Het deel heeft dus nog geen crawl: de tab is leeg tot de eerste crawl met de filter.
+  De nieuwe crawl is daarna gedaan (690 pagina's, 1.402 spelfouten, 1.790 namen). Wat erin zat: vier woorden uit het
+  menu of sjabloon (`filtertool` 424, `iCloud` 211, `advisably` 211, `laissez-passers` 210; samen 1.056 van de 1.402) en
+  40 webadressen, vooral fotowinkels. De webadressen zijn daarna met een nieuwe regel uitgesloten (zie "Webadressen");
+  de vier woorden moet de redactie goedkeuren. `filtertool` was bij het terugzetten van het deel ingetrokken (id 86).
 - De 88 woorden die de redactie in de paspoort-tab had goedgekeurd (id 86 en 88 tot en met 174 in `goedgekeurd`, 19 oktober)
   zijn ingetrokken, niet verwijderd. `apostille` (id 87) is blijven staan: het komt ook in andere delen voor. De filter
   haalt het anderstalige deel eruit, dus die woorden hoeven niet opnieuw te worden goedgekeurd.
@@ -173,6 +176,16 @@ losse anderstalige woorden zonder buren (veel Portugees en Frans), en citaten di
 afliggen (`permanente`). Zie je dat in een volgende crawl, dan is de tros-regel bij te stellen. Een bijwerking: een
 tros van echte typfouten dicht bij elkaar valt ook weg. In de bestaande crawls van de andere delen raakt de regel
 vrijwel alleen Turks en Frans.
+
+### Webadressen
+
+Een webadres kun je niet op spelling toetsen, en de woordenlijst kent geen domeinnamen. `is_webadres()` in `crawl.py`
+slaat ze over: `www.…`, `http`, `https`, en een domein met een bekende uitgang in kleine letters (`TLD`:
+`facebook.com`, `rechtspraak.nl`, `ePortugal.gov.pt`). Vier uitgangen zijn ook gewone Engelse woorden (`it`, `no`, `us`,
+`at`, `be`): die tellen alleen met `www.` ervoor of met een tweede deel erachter (`www.foto.it`, niet `fix.it`). Een
+vergeten spatie blijft een fout: `ID-card.This` en `form.This` zijn geen webadres, want de uitgang staat niet in kleine letters.
+Gecontroleerd op de 40 webadressen uit de paspoortcrawl: alle herkend, en geen enkel woord uit dezelfde lijst ten
+onrechte. Een typfout in een webadres wordt dus niet gevonden.
 
 ### Vertalingen
 

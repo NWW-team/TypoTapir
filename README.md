@@ -90,6 +90,12 @@ vallen weg, en ook een tros van drie onbekende woorden binnen vijf opeenvolgende
 lijkt blijft wel gemeld (`firts`, `legalized`). Wat wegvalt wordt niet bewaard; het logboek van de crawl zegt hoeveel
 woorden zijn overgeslagen. De regel staat in `zoek_fouten` in `scripts/crawl.py`.
 
+### Webadressen
+
+Webadressen (`www.fotomarbella.com`, `rechtspraak.nl`, `https`) telt de app niet als spelfout: een domeinnaam is geen
+woord uit de woordenlijst. Een typfout in een webadres wordt dus niet gevonden. Een vergeten spatie na een punt
+(`form.This`) blijft wel een fout. De regel staat in `is_webadres` in `scripts/crawl.py`.
+
 ### Plaatsnamen nakijken
 
 De woordenlijst kent geen namen, dus `Cochabamba` en een verkeerd gespelde variant krijgen
@@ -169,7 +175,7 @@ Geen installatie nodig; alleen Python 3.
 python3 scripts/crawl.py --bron demo --max-paginas 5     # fictieve pagina's, zonder netwerk
 python3 scripts/crawl.py --bron visa-the-netherlands --max-paginas 10
 python3 -m http.server --directory docs 8000             # scherm bekijken op localhost:8000
-python3 scripts/test.py                                  # 149 controles; --offline slaat het netwerk over
+python3 scripts/test.py                                  # 153 controles; --offline slaat het netwerk over
 ```
 
 Het scherm heeft Supabase nodig om iets te tonen; lokaal zie je zonder internet niets. Het resultaat van een lokale crawl in Supabase zetten kan met:

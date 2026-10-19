@@ -259,6 +259,33 @@ def is_bekend(woord, woorden):
     return False
 
 
+# Eindes van webadressen. Vier ervan zijn ook gewone Engelse woorden ("done.no", "fix.it");
+# die tellen alleen mee met "www." ervoor of met een tweede deel erachter ("www.foto.it", "x.co.uk").
+TLD = ("com", "net", "org", "nl", "eu", "gov", "int", "info", "edu", "uk", "de", "fr", "es", "pt", "ca",
+       "au", "mx", "dk", "se", "fi", "cz", "si", "hu", "ro", "pl", "at", "ch", "ie", "gr", "lu", "nz",
+       "za", "tr", "co", "be")
+TLD_TWEEDUITLEG = ("it", "no", "us", "at", "be")
+WEBADRES = re.compile(
+    r"^(?:https?://)?(?P<www>www\.)?(?:[A-Za-z0-9-]+\.)+(?P<tld>[a-z]{2,4})$")
+
+
+def is_webadres(woord):
+    """Of het woord een webadres is: "www.fotomarbella.com", "rechtspraak.nl", "http", "https".
+
+    Een webadres kun je niet op spelling toetsen. De uitgang moet in kleine letters staan
+    en een bekende zijn, anders is het een vergeten spatie ("ID-card.This").
+    """
+    if woord.lower() in ("http", "https", "www"):
+        return True
+    treffer = WEBADRES.match(woord)
+    if not treffer:
+        return False
+    tld = treffer.group("tld")
+    if tld in TLD_TWEEDUITLEG:
+        return bool(treffer.group("www")) or woord.count(".") >= 2
+    return tld in TLD
+
+
 def is_plakfout(woord):
     """Zegt of een punt middenin het woord op een vergeten spatie wijst.
 
@@ -387,6 +414,8 @@ def zoek_fouten(tekst, toegestaan):
                 continue  # versienummers, jaartallen, codes
             if "@" in woord:
                 continue  # e-mailadressen
+            if is_webadres(woord):
+                continue  # www.fotomarbella.com, rechtspraak.nl, https
             positie += 1
             if is_bekend(woord, toegestaan):
                 continue
