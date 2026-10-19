@@ -33,7 +33,7 @@ met nakijken:
 | Woordenlijst | Debian-pakket `wbritish` 2020.12.07-2 (SCOWL), 103.494 woorden; sha256 vastgelegd in `data/woordenlijst.sha256` |
 | Controles | 139, `python3 scripts/test.py --offline` |
 | Crawls | 4: Visa for the Netherlands (12 oktober), Caribbean visa (13 oktober), Making an appointment (16 oktober) en Passport or ID card (19 oktober, teruggezet). Alleen de eerste is hieronder beschreven |
-| Goedgekeurd | 77 actieve goedgekeurde woorden en namen en 3 namen als spelfout aangewezen (13 oktober); de redactie is begonnen |
+| Goedgekeurd | 84 actieve goedgekeurde woorden en namen (20 oktober; op 13 oktober waren het 77) en 3 namen als spelfout aangewezen; de redactie is begonnen |
 
 **De eerste crawl (12 oktober, 15.08 uur Nederlandse tijd).** De run duurde 17 minuten (de crawl zelf 15,5)
 en was volledig groen. Hij pakte 1.038 pagina's, **inclusief 360 vertalingen** (`.fr`, `.es`, `.de`), want die
@@ -114,6 +114,8 @@ de datum, niet op het deel.
 teruggezet**, omdat de tab nog niet goed genoeg werkt. Wat er nog van over is, en bewust is blijven staan:
 - De crawl van 19 oktober staat nog in de database (3.421 bevindingen, `crawls.bron = 'passport-id-card'`). Het scherm
   toont hem niet, omdat het deel niet meer in `DEEL_INFO` staat.
+- De 88 woorden die de redactie in de paspoort-tab had goedgekeurd (id 86 en 88 tot en met 174 in `goedgekeurd`, 19 oktober) zijn
+  ingetrokken, niet verwijderd. `apostille` (id 87) is blijven staan: het komt ook in andere delen voor.
 - De migratie `20261019000000_deel_passport_id_card.sql` is toegepast en laat `passport-id-card` nog toe in
   `crawl_aanvragen.bron`. Een strengere controle zou de bestaande crawl-aanvraag afwijzen.
 - Uit de code zijn weg: de regel in `DELEN`, de workflow-optie, `BRONNEN` in `crawl-starten` (nu versie 7) en
@@ -263,7 +265,7 @@ In volgorde van belang.
 | Vertalingen | niet van toepassing | `.fr`, `.es`, `.de`, `/fr`, `/es`, `/de` overgeslagen |
 | Woordenlijst ophalen | download van OpenTaal, sha256 in `data/opentaal.sha256` | `apt-get install wbritish`, sha256 in `data/woordenlijst.sha256` |
 | Supabase | `riwznqurcluudvyrkwxe` (eu-west-2) | `zasfgsgmbapnhfsnqsrp` (eu-west-1) |
-| Goedgekeurde woorden | 924 actief | 77 actief (13 oktober) |
+| Goedgekeurde woorden | 924 actief | 84 actief (20 oktober) |
 | Logo | hond | tapir |
 | Migraties | tien, de basistabellen met de hand | dertien, met de basistabellen erbij |
 
