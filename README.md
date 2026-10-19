@@ -18,7 +18,7 @@ waarom.
 1. Je drukt in het scherm op **Crawl starten** en kiest een deel van de site. Een crawl
    pakt altijd het hele deel; er is geen maximumaantal pagina's om in te stellen, ook niet bij
    de knop **Run workflow** van [de Crawl-workflow](../../actions/workflows/crawl.yml) in
-   GitHub, waar alleen het deel te kiezen is. Er mag één crawl per dag via het scherm. Een
+   GitHub, waar alleen het deel te kiezen is. Er mag één crawl per dag via het scherm, voor alle delen samen. Een
    lopende crawl is te volgen aan de voortgangsbalk en met **Crawl stoppen** te stoppen.
 2. Een GitHub-runner leest de sitemaps, haalt de pagina's van het gekozen deel op en pakt de
    tekst uit het `<main>`-element. Menu's en voetteksten blijven buiten beeld.
