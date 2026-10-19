@@ -20,7 +20,7 @@ from plaatsnamen import Plaatsnamen, afstand, samenvatting, tokens  # noqa: E402
 from voortgang import meld  # noqa: E402
 from crawl import (DELEN, SITE, alle_sitemap_urls, is_bekend, is_vertaling, urls_van_deel, valt_onder, verplaats_namen, lees_goedgekeurd,  # noqa: E402
                    maak_robots_controle, naar_patroon, soort_van, tekst_uit_main,
-                   zoek_fouten, ANDERSTALIG)
+                   zoek_fouten, ANDERSTALIG, is_webadres)
 
 WORTEL = Path(__file__).resolve().parent.parent
 uitkomsten = []
@@ -505,6 +505,19 @@ def main():
     zoek_fouten("Apply for a passport with personbevis och folkbokf\u00f6ringsuppgifter in case of a child.", set(en))
     controle("de overgeslagen woorden worden geteld", ANDERSTALIG["woorden"] == 3, str(ANDERSTALIG))
 
+    print("\nWebadressen")
+    adressen = ["www.fotomarbella.com", "facebook.com", "rechtspraak.nl", "ePortugal.gov.pt", "Service-Public.fr",
+                "www.a-zphotography.net.au", "www.fotoc.dk", "www.foto.it", "https", "http", "www"]
+    controle("webadressen worden niet als spelfout gemeld",
+             all(zoek_fouten(f"Visit {a} for details.", {"visit", "for", "details"}) == [] for a in adressen))
+    controle("een tekst met een webadres meldt de typfout ernaast wel",
+             [b["woord"] for b in zoek_fouten("Visit www.foto.com for detials.", {"visit", "for"})] == ["detials"])
+    controle("een vergeten spatie is geen webadres",
+             [b["woord"] for b in zoek_fouten("Read the form.This is new.", {"read", "the", "form", "is", "new"})] == ["form.This"]
+             and [b["woord"] for b in zoek_fouten("Open the ID-card.This is new.", {"open", "the", "is", "new"})] == ["ID-card.This"])
+    controle("een gewoon woord met een korte uitgang is geen webadres",
+             [b["woord"] for b in zoek_fouten("We are done.no more.", {"we", "are", "more"})] != []
+             and not is_webadres("done.no") and not is_webadres("fix.it") and is_webadres("www.fix.it"))
     print("\nHuisstijl met een plus")
     huis = {"lhbtiq+", "vriendelijke", "een", "persoon"}
     controle("lhbtiq+ wordt goedgekeurd", "lhbtiq+" not in woorden_in_met("Een lhbtiq+ persoon.", huis))
