@@ -38,6 +38,7 @@ DELEN = {
     "caribbean-visa": "/caribbean-visa",
     "making-appointment": "/making-appointment",
     "passport-id-card": "/passport-id-card",
+    "declaration": "/declaration",
 }
 SITEMAP_INDEX = f"{SITE}/sitemap.xml"
 

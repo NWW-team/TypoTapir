@@ -176,7 +176,8 @@ def main():
              valt_onder(SITE + P + "/short-stay/tourism/apply", P))
     controle("er is een deel met het gevraagde pad", DELEN == {"visa-the-netherlands": P, "caribbean-visa": "/caribbean-visa",
                                 "making-appointment": "/making-appointment",
-                                "passport-id-card": "/passport-id-card"}, str(DELEN))
+                                "passport-id-card": "/passport-id-card",
+                                "declaration": "/declaration"}, str(DELEN))
     controle("een vertaling (.fr, .es, .de) is geen Engelse pagina",
              all(is_vertaling(SITE + P + "/waiting-time" + s) for s in (".fr", ".es", ".de")))
     controle("een vertaling als laatste deel van het pad (/fr, /es, /de) telt ook",
