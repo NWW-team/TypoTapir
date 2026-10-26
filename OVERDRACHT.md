@@ -29,7 +29,7 @@ met nakijken:
 | Repository | `NWW-team/TypoTapir`, branch `main` (squash-merges via pull requests; de laatste is 13) |
 | Supabase | project **TypoTapir**, `zasfgsgmbapnhfsnqsrp`, regio eu-west-1, URL `https://zasfgsgmbapnhfsnqsrp.supabase.co` |
 | Scherm | GitHub Pages, branch `main`, map `/docs` |
-| Delen van de site | vier tabs: `visa-the-netherlands` (1.015 pagina's), `caribbean-visa` (452), `making-appointment` (219) en `passport-id-card` (690); alles onder het pad, zonder vertalingen |
+| Delen van de site | vijf tabs: `visa-the-netherlands` (1.015 pagina's), `caribbean-visa` (452), `making-appointment` (219), `passport-id-card` (690) en `declaration` (726, tab "Consular certificate"); alles onder het pad, zonder vertalingen |
 | Woordenlijst | Debian-pakket `wbritish` 2020.12.07-2 (SCOWL), 103.494 woorden; sha256 vastgelegd in `data/woordenlijst.sha256` |
 | Controles | 153, `python3 scripts/test.py --offline` |
 | Crawls | 4: Visa for the Netherlands (12 oktober), Caribbean visa (13 oktober), Making an appointment (16 oktober) en Passport or ID card (19 oktober, de tweede keer, met de filter voor anderstalige citaten). Alleen de eerste is hieronder beschreven |
@@ -73,11 +73,11 @@ Precies als bij het origineel:
 
 | Onderdeel | Waar | Wat |
 |---|---|---|
-| Scherm | `docs/index.html`, `docs/xlsx.js`, `docs/icoon*.png` | Eén bestand, geen buildstap. Tabs per deel (nu vier), crawlknop in de tab, Excel bij Spelfouten (Pagina, Zin met vet woord, Woord, Suggestie, Opmerking) |
+| Scherm | `docs/index.html`, `docs/xlsx.js`, `docs/icoon*.png` | Eén bestand, geen buildstap. Tabs per deel (nu vijf), crawlknop in de tab, Excel bij Spelfouten (Pagina, Zin met vet woord, Woord, Suggestie, Opmerking) |
 | Crawler en toets | `scripts/crawl.py` | `SITE`, `DELEN`, `is_vertaling`, de toets zelf. Alleen standaardbibliotheek |
 | Overige scripts | `scripts/plaatsnamen.py`, `haal_goedgekeurd.py`, `voortgang.py`, `publiceer.py` | Gelijk aan het origineel |
-| Workflow | `.github/workflows/crawl.yml` | Invoer: `bron` (`demo` en de vier delen) en `aanvraag_id`. Er is geen `opentaal_ref` meer |
-| Database | `supabase/migrations/` | Dertien migraties, **met de hand toegepast** (via de MCP, zie hieronder) |
+| Workflow | `.github/workflows/crawl.yml` | Invoer: `bron` (`demo` en de vijf delen) en `aanvraag_id`. Er is geen `opentaal_ref` meer |
+| Database | `supabase/migrations/` | Veertien migraties, **met de hand toegepast** (via de MCP, zie hieronder) |
 | Edge Functions | `supabase/functions/` | Vier, `verify_jwt = false`, **met de hand gedeployd** (12 oktober, versie 1; `crawl-starten` is bij elk nieuw deel opnieuw gedeployd, nu versie 8 op 20 oktober) |
 
 ### Supabase
@@ -87,7 +87,7 @@ Tabellen, rechten en functies zijn die van het origineel (zie daar voor de besch
   `bevindingen` met de hand aangemaakt en stond dat in geen enkele migratie, waardoor de reeks op een leeg
   project niet werkt. De Nederlandse woordenlijst-import (`…050000_uitzonderingen_importeren.sql`) is hier
   weggelaten.
-- `crawl_aanvragen.bron` mag de vier delen zijn (migratie `…070000`, daarna bij elk nieuw deel opgerekt: `20261013000000`, `20261016000000`, `20261019000000`).
+- `crawl_aanvragen.bron` mag de vijf delen zijn (migratie `…070000`, daarna bij elk nieuw deel opgerekt: `20261013000000`, `20261016000000`, `20261019000000`, `20261026000000`).
 - **Hoe het is toegepast**, voor wie de versies in de database vergelijkt: de migraties staan in
   `supabase_migrations` onder andere namen en tijdstippen (alle 12 oktober), en zijn deels samengevoegd of
   gesplitst. `open_lezen` is zonder het blok dat bestaande policies verwijdert toegepast (er waren er geen).
@@ -105,8 +105,8 @@ De publieke Supabase-key (`sb_publishable_…`) staat bewust in `docs/index.html
 
 ### De delen van de site
 
-`DELEN` in `crawl.py` heeft vier delen (Caribbean visa sinds 13 oktober, Making an appointment sinds 16 oktober,
-Passport or ID card sinds 19 oktober; migraties en Edge Function zijn toegepast). **De limiet van één crawl per dag
+`DELEN` in `crawl.py` heeft vijf delen (Caribbean visa sinds 13 oktober, Making an appointment sinds 16 oktober,
+Passport or ID card sinds 19 oktober, Consular certificate sinds 26 oktober; migraties en Edge Function zijn toegepast). **De limiet van één crawl per dag
 geldt voor alle delen samen, bewust** (besluit van de opdrachtgever, om te vaak crawlen te voorkomen): de unieke index
 in `crawl_aanvragen` staat alleen op de datum, niet op het deel.
 
@@ -133,16 +133,17 @@ anderstalige woorden stond (1.626 spelfouten), en daarna opnieuw toegevoegd met 
 | Caribbean visa | `/caribbean-visa` | 452 (Engels, zonder vertalingen; 581 met) |
 | Making an appointment | `/making-appointment` | 219 (geen vertalingen) |
 | Passport or ID card | `/passport-id-card` | 690 (Engels, zonder vertalingen; 885 met) |
+| Consular certificate | `/declaration` | 726 (Engels, zonder vertalingen; 868 met) |
 
 De sitemaps hebben ±5.850 URL's. Visa for the Netherlands heeft er 1.398, waarvan 383 vertalingen. Overige bovenste paden
 (telling inclusief vertalingen), voor als er delen bij moeten komen:
 
 | Pad | URL's | Pad | URL's |
 |---|---|---|---|
-| `/declaration` | 868 | `/consular-fees` | 267 |
-| `/legalisation` | 310 | `/contact` | 222 |
-| `/civic-integration-exam-abroad` | 271 | `/digid-abroad` | 136 |
-| `/marry` | 84 | `/dutch-nationality` | 57 |
+| `/legalisation` | 310 | `/consular-fees` | 267 |
+| `/civic-integration-exam-abroad` | 271 | `/contact` | 222 |
+| `/digid-abroad` | 136 | `/marry` | 84 |
+| `/dutch-nationality` | 57 | | |
 
 Een deel toevoegen kost (in deze volgorde): een regel in `DELEN`, de naam in `options` van de workflow, een migratie
 voor de controle op `crawl_aanvragen.bron`, `BRONNEN` in `crawl-starten` én een regel in `DEEL_INFO` in
@@ -153,7 +154,7 @@ workflow niet kent.
 `/contact/embassies-consulates-general` stonden alleen de 218 landpagina's, terwijl er per land nog pagina's als
 `/algeria/embassy-algiers` bestaan die alleen via links bereikbaar zijn. De crawler volgt geen links, dus die
 pagina's waren niet gecrawld. Dat deel is daarom (op verzoek) **niet toegevoegd**. Wil je het alsnog, dan moet de
-crawler links kunnen volgen binnen een deel (nog niet gebouwd). Voor de vier huidige delen is een steekproef van
+crawler links kunnen volgen binnen een deel (nog niet gebouwd). Voor de vijf huidige delen is een steekproef van
 25 tot 30 pagina's per deel gedaan zonder links buiten de sitemap te vinden; een volledige controle is niet gedaan.
 
 ### Anderstalige citaten
@@ -299,7 +300,7 @@ In volgorde van belang.
 |---|---|---|
 | Site | nederlandwereldwijd.nl | netherlandsworldwide.nl |
 | Taal | Nederlands (OpenTaal) | Brits Engels, -ise (SCOWL, `wbritish`) |
-| Delen | vier | vier (`visa-the-netherlands`, `caribbean-visa`, `making-appointment`, `passport-id-card`) |
+| Delen | vier | vijf (`visa-the-netherlands`, `caribbean-visa`, `making-appointment`, `passport-id-card`, `declaration`) |
 | Vertalingen | niet van toepassing | `.fr`, `.es`, `.de`, `/fr`, `/es`, `/de` overgeslagen |
 | Woordenlijst ophalen | download van OpenTaal, sha256 in `data/opentaal.sha256` | `apt-get install wbritish`, sha256 in `data/woordenlijst.sha256` |
 | Supabase | `riwznqurcluudvyrkwxe` (eu-west-2) | `zasfgsgmbapnhfsnqsrp` (eu-west-1) |

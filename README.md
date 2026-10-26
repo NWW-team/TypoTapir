@@ -56,6 +56,7 @@ Je kiest een deel van de site; alles onder dat pad hoort erbij.
 | Caribbean visa | `/caribbean-visa` | 452 |
 | Making an appointment | `/making-appointment` | 219 |
 | Passport or ID card | `/passport-id-card` | 690 |
+| Consular certificate | `/declaration` | 726 |
 
 De pagina's staan verspreid over de sitemaps van de site, dus de crawler leest ze allemaal en houdt over wat
 onder het pad valt. **Vertalingen worden overgeslagen**: de site zet Franse, Spaanse en Duitse versies naast de
