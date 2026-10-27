@@ -70,6 +70,13 @@
   .tabblad[aria-selected="true"], .deeltab[aria-selected="true"] { background: var(--vlak); border-color: var(--lijn);
     color: var(--inkt); font-weight: 600;
     border-bottom: 3px solid var(--tabrand); border-radius: 6px 6px 0 0; }
+  /* De tabs van de delen staan in een raster over twee regels; --kolommen zet het script. */
+  .tabbladen.deeltabs { display: grid; grid-template-columns: repeat(var(--kolommen, 3), max-content);
+    justify-content: start; }
+  .deeltabs .deeltab { text-align: center; }
+  @media (max-width: 560px) {
+    .tabbladen.deeltabs { grid-template-columns: repeat(2, minmax(0, 1fr)); justify-content: stretch; }
+  }
   .tabblad .aantal { color: var(--gedempt); font-weight: 400; }
   .uitleg { color: var(--gedempt); font-size: .9rem; margin: 0 0 16px; }
   .tabelhouder { overflow-x: auto; }
@@ -912,7 +919,7 @@ crawlKnop.addEventListener("click", async () => {
   }
 });
 
-// De delen van de site, in de volgorde van de keuzelijst bij "Nieuwe crawl".
+// De delen van de site. De tabs staan op alfabet van de naam, dus de volgorde hier maakt niet uit.
 const DEEL_INFO = {
   // Alleen de Engelse pagina's: de vertalingen (.fr, .es, .de) worden overgeslagen.
   "visa-the-netherlands": { naam: "Visa for the Netherlands", paginas: "±1.015" },
@@ -921,15 +928,17 @@ const DEEL_INFO = {
   "passport-id-card": { naam: "Passport or ID card", paginas: "±690" },
   "declaration": { naam: "Consular certificate", paginas: "±726" },
 };
-const DELEN = Object.keys(DEEL_INFO);
+const DELEN = Object.keys(DEEL_INFO)
+  .sort((a, b) => DEEL_INFO[a].naam.localeCompare(DEEL_INFO[b].naam, "en"));
 const deeltabsVak = document.getElementById("deeltabs");
-let huidigeDeel = DELEN[0];           // altijd Reisadvies bij het openen
+let huidigeDeel = "visa-the-netherlands";   // dit deel staat open bij het laden
 let laatstePerDeel = {};              // per deel de laatste crawl, of undefined als er geen is
 
 function tekenDeeltabs() {
   const info = DEEL_INFO[huidigeDeel];
   document.getElementById("crawlkop").textContent = `Nieuwe crawl: ${info.naam}`;
   document.getElementById("crawlknop").textContent = `Crawl starten (${info.paginas} pagina's)`;
+  deeltabsVak.style.setProperty("--kolommen", Math.ceil(DELEN.length / 2));  // twee regels
   deeltabsVak.innerHTML = DELEN.map(bron => `
     <button type="button" class="deeltab" role="tab" data-deel="${bron}"
             aria-selected="${bron === huidigeDeel}" tabindex="${bron === huidigeDeel ? 0 : -1}">
