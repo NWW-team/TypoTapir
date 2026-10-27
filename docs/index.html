@@ -71,11 +71,10 @@
     color: var(--inkt); font-weight: 600;
     border-bottom: 3px solid var(--tabrand); border-radius: 6px 6px 0 0; }
   /* De tabs van de delen staan in een raster over twee regels; --kolommen zet het script. */
-  .tabbladen.deeltabs { display: grid; grid-template-columns: repeat(var(--kolommen, 3), max-content);
-    justify-content: start; }
+  .tabbladen.deeltabs { display: grid; grid-template-columns: repeat(var(--kolommen, 3), minmax(0, 1fr)); }
   .deeltabs .deeltab { text-align: center; }
   @media (max-width: 560px) {
-    .tabbladen.deeltabs { grid-template-columns: repeat(2, minmax(0, 1fr)); justify-content: stretch; }
+    .tabbladen.deeltabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   .tabblad .aantal { color: var(--gedempt); font-weight: 400; }
   .uitleg { color: var(--gedempt); font-size: .9rem; margin: 0 0 16px; }
