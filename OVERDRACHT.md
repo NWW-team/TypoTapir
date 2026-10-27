@@ -147,7 +147,8 @@ De sitemaps hebben ±5.850 URL's. Visa for the Netherlands heeft er 1.398, waarv
 
 Een deel toevoegen kost (in deze volgorde): een regel in `DELEN`, de naam in `options` van de workflow, een migratie
 voor de controle op `crawl_aanvragen.bron`, `BRONNEN` in `crawl-starten` én een regel in `DEEL_INFO` in
-`docs/index.html`. Eerst de workflow mergen, dan de Edge Function deployen: GitHub weigert een invoer die de
+`docs/index.html`. De tabs staan op alfabet van de naam (`DELEN` in het script sorteert zelf) en zijn verdeeld over twee
+regels (een raster met `--kolommen`); een nieuw deel hoeft daar niets voor. Eerst de workflow mergen, dan de Edge Function deployen: GitHub weigert een invoer die de
 workflow niet kent.
 
 **Meet eerst of de sitemap het hele deel bevat.** De sitemaps staan niet altijd vol: onder
